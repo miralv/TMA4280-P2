@@ -1,0 +1,1 @@
+/usr/bin/c++   -fopenmp    -rdynamic -Wl,--export-dynamic -pthread CMakeFiles/poisson_parallel.dir/poisson_parallel.cpp.o  -o poisson_parallel -Wl,-rpath,/home/mira/.openmpi/lib /home/mira/.openmpi/lib/libmpi_cxx.so /home/mira/.openmpi/lib/libmpi.so /home/mira/.openmpi/lib/libopen-rte.so /home/mira/.openmpi/lib/libopen-pal.so -lnsl -lutil -lm -ldl 

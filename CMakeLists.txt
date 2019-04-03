@@ -1,10 +1,13 @@
-project(TMA4280_project1)
+project(TMA4280-P2)
 cmake_minimum_required( VERSION 2.8)
+
+enable_language(C)
+enable_language(Fortran)
+enable_language(C_XX)
+
 
 find_package(MPI REQUIRED)
 find_package(OpenMP REQUIRED)
-
-
 
 foreach (prog poisson_parallel)
     add_executable(${prog} ${prog}.cpp)
@@ -15,11 +18,8 @@ foreach (prog poisson_parallel)
     set_target_properties(${prog} PROPERTIES LINK_FLAGS ${MPI_CXX_LINK_FLAGS})
 endforeach()
 
-#The files using only openmp
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-
-add_executable(poisson_parallel poisson_parallel.cpp)
 
 

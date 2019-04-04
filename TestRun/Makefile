@@ -123,6 +123,46 @@ poisson_parallel/fast:
 	$(MAKE) -f CMakeFiles/poisson_parallel.dir/build.make CMakeFiles/poisson_parallel.dir/build
 .PHONY : poisson_parallel/fast
 
+#=============================================================================
+# Target rules for targets named common
+
+# Build rule for target.
+common: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 common
+.PHONY : common
+
+# fast build rule for target.
+common/fast:
+	$(MAKE) -f CMakeFiles/common.dir/build.make CMakeFiles/common.dir/build
+.PHONY : common/fast
+
+fst.o: fst.f.o
+
+.PHONY : fst.o
+
+# target to build an object file
+fst.f.o:
+	$(MAKE) -f CMakeFiles/common.dir/build.make CMakeFiles/common.dir/fst.f.o
+.PHONY : fst.f.o
+
+fst.i: fst.f.i
+
+.PHONY : fst.i
+
+# target to preprocess a source file
+fst.f.i:
+	$(MAKE) -f CMakeFiles/common.dir/build.make CMakeFiles/common.dir/fst.f.i
+.PHONY : fst.f.i
+
+fst.s: fst.f.s
+
+.PHONY : fst.s
+
+# target to generate assembly for a file
+fst.f.s:
+	$(MAKE) -f CMakeFiles/common.dir/build.make CMakeFiles/common.dir/fst.f.s
+.PHONY : fst.f.s
+
 poisson_parallel.o: poisson_parallel.cpp.o
 
 .PHONY : poisson_parallel.o
@@ -157,8 +197,12 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... poisson_parallel"
 	@echo "... edit_cache"
+	@echo "... poisson_parallel"
+	@echo "... common"
+	@echo "... fst.o"
+	@echo "... fst.i"
+	@echo "... fst.s"
 	@echo "... poisson_parallel.o"
 	@echo "... poisson_parallel.i"
 	@echo "... poisson_parallel.s"

@@ -1,0 +1,49 @@
+project(TMA4280-P2)
+cmake_minimum_required( VERSION 2.8)
+
+enable_language(C)
+enable_language(Fortran)
+enable_language(CXX)
+
+
+find_package(MPI REQUIRED)
+find_package(OpenMP REQUIRED)
+
+# MPI
+add_definitions(-DHAVE_MPI=1)
+set(INCLUDES ${INCLUDES} ${MPI_INCLUDE_PATH})
+set(DEPLIBS_C ${DEPLIBS_C} ${MPI_C_LIBRARIES})
+set(DEPLIBS_F ${DEPLIBS_F} ${MPI_Fortran_LIBRARIES})
+set(DEPLIBS_CXX ${DEPLIBS_CXX} ${MPI_CXX_LIBRARIES})
+
+
+# OpenMP
+add_definitions(-DHAVE_OPENMP=1)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
+
+# Use C99
+set(CMAKE_C_FLAGS "-std=c99 ${CMAKE_C_FLAGS}")
+
+# Send the include directories to the compiler
+include_directories(${INCLUDES})
+
+# Add a library with common sources
+add_library(common fst.f)
+
+# The C based poisson application
+# add_executable(poisson poisson.c)
+
+# The Fortran based poisson application
+# add_executable(poisson-f poisson.f90)
+
+# The C++ implementation
+add_executable(poisson_parallel poisson_parallel.cpp)
+
+# Link to libraries
+target_link_libraries(poisson_parallel common ${DEPLIBS_CXX} ${DEPLIBS_C})
+
+# We want to link this as a C++ program
+# set_target_properties(poisson_parallel PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(poisson_parallel PROPERTIES LINKER_FLAGS ${MPI_CXX_LINK_FLAGS})

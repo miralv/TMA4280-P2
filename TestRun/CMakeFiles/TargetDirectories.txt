@@ -1,3 +1,4 @@
 /home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles/rebuild_cache.dir
-/home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles/poisson_parallel.dir
 /home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles/edit_cache.dir
+/home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles/poisson_parallel.dir
+/home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles/common.dir

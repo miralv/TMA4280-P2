@@ -6,5 +6,5 @@ CXX_FLAGS =  -fopenmp   -pthread
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/mira/.openmpi/include 
+CXX_INCLUDES = -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include 
 

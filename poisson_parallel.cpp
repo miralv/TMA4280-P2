@@ -64,10 +64,12 @@ int main(int argc, char **argv)
      *  - the mesh size is constant h = 1/n.
      */
     int n = atoi(argv[1]);
-    if ((n & (n-1)) != 0) {
+    if ((n & (n-1)) != 0 && n!=5) {
       printf("n must be a power-of-two\n");
       return 2;
     }
+
+
 
     int m = n - 1;
     double h = 1.0 / n;
@@ -95,10 +97,11 @@ int main(int argc, char **argv)
     // Distribute a block of rows to each process
     // Need to have control of global and local positions (?)
 
-    int *block_size = (int*) calloc(P,sizeof(int)); // block size
+    int *block_size = (int*) calloc(P,sizeof(int)); // block sizes
     int *block_size_sum = (int*) calloc(P, sizeof(int)); // sum of all block sizes i = 0, ..., i=i-1 control mechanism
-    int *counts = (int*) calloc(P,sizeof(int)); // TODO: Explain
-    int *displs = (int*) calloc(P,sizeof(int)); // TODO: Explain
+    int *counts = (int*) calloc(P,sizeof(int)); // n elements in block ?
+    int *displs = (int*) calloc(P,sizeof(int)); // global position
+
 
 
     block_size[0] = ceil(m/P);
@@ -129,12 +132,14 @@ int main(int argc, char **argv)
     // Check that all m rows are distributed:
     if (rank == 0){
         cout<< "Check that all m rows are distributed:"<<endl;
+        
         valarray<int> my_block_sizes (block_size, P);
         int rows_dist = my_block_sizes.sum();
-
-
-        if (rows_dist != n){
+        if (rows_dist != m){
             cout<<"rows distributed = "<<rows_dist<<" != m:"<<m<<endl;
+        }
+        else{
+            cout<<"OK"<<endl;
         }
     }
 
@@ -226,6 +231,102 @@ int main(int argc, char **argv)
      * In functions fst_ and fst_inv_ coefficients are written back to the input 
      * array (first argument) so that the initial values are overwritten.
      */
+
+
+    //////////////////////////////////////////////////////////////////////
+
+    if (n==5){
+        /* Unit test to check the the transpose operation is working properly
+        */
+        double ** my_test_matrix = mk_2D_array(4, 4, false);
+        double ** my_test_matrix_transpose = mk_2D_array(4, 4, false);
+
+        my_test_matrix[0][0] = 1; 
+        my_test_matrix[0][1] = 2;
+        my_test_matrix[0][2] = 3;
+        my_test_matrix[0][3] = 4;
+        my_test_matrix[1][0] = 5; 
+        my_test_matrix[1][1] = 6;
+        my_test_matrix[1][2] = 7;
+        my_test_matrix[1][3] = 8; 
+        my_test_matrix[2][0] = 1;
+        my_test_matrix[2][1] = 2;
+        my_test_matrix[2][2] = 3;
+        my_test_matrix[2][3] = 4;
+        my_test_matrix[3][0] = 5;
+        my_test_matrix[3][1] = 6;
+        my_test_matrix[3][2] = 7;
+        my_test_matrix[3][3] = 8;
+        cout<<"Print test matrix:\n";
+        for (int i=0; i<4;i++){
+            for (int j=0; j<4;j++){
+                cout<<my_test_matrix[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+
+        double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
+        double *block_vec_b_pre_transp = mk_1D_array(block_size[rank]*m, false);
+        double *block_vec_bt= mk_1D_array(block_size[rank]*m, false);
+    
+    
+    
+    
+        // Reorder b from row-by-row to subrow-by-subrow
+        #pragma omp for collapse(2)
+        for (size_t i = 0; i < block_size[rank]; i++){
+            for (size_t j = 0; j<P; j++){
+                for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
+                    block_vec_b[ displs[j] + i*block_size[j] + k] = my_test_matrix[i][k];
+                }
+            }
+        }
+
+        // Broadcast data
+        #pragma omp master 
+        {
+            MPI_Alltoallv(block_vec_b,counts,displs,MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
+
+        }
+
+        // Transpose block wise
+        for (size_t i = 0; i < P; i++){
+            int M = counts[i]/block_size[i]; // Rows of orig block
+            #pragma omp for collapse(2)
+            for (size_t j = 0; j<block_size[i]; j++){
+                for (size_t k =0; k<M; k++){
+                    block_vec_bt[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
+                }
+            }
+        }
+
+        // Reorder back from vector to matrix bt
+        #pragma omp for collapse(2)
+        for (size_t i = 0; i < block_size[rank]; i++){
+            for (size_t j = 0; j<P; j++){
+                for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
+                    my_test_matrix_transpose[i][k] = block_vec_bt[ displs[j] + i*block_size[j] + k];
+                }
+            }
+        }    
+
+        cout<<"Print test matrix's transpose:\n";
+        for (int i=0; i<4;i++){
+            for (int j=0; j<4;j++){
+                cout<<my_test_matrix_transpose[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+
+        free(block_vec_b);
+        free(block_vec_bt);
+        free(block_vec_b_pre_transp);
+
+    }
+
+/////////////////////////////////////////////////////////////////////
+
+
 
 
     double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
@@ -385,17 +486,26 @@ int main(int argc, char **argv)
     } // end pragma
 
     // Release memory
+    // Why is it not necessary to release the rest?
+    /*
     for (size_t i = 0; i<block_size[rank]; i++){
         free(bt[i]);
         free(b[i]);
     }
+    
+    free(block_vec_b);
+    free(block_vec_b_pre_transp);
+    free(block_vec_bt);
+    */
+    free(block_vec_b);
+    free(block_vec_bt);
+    free(block_vec_b_pre_transp);
+
+    
     free(displs);
     free(counts);
     free(block_size);
     free(block_size_sum);
-    free(block_vec_b);
-    free(block_vec_b_pre_transp);
-    free(block_vec_bt);
     
 
     MPI_Finalize();
@@ -468,4 +578,3 @@ double **mk_2D_array(size_t n1, size_t n2, bool zero)
     }
     return ret;
 }
-

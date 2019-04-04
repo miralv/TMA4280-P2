@@ -79,14 +79,9 @@ poisson_parallel_EXTERNAL_OBJECTS =
 
 poisson_parallel: CMakeFiles/poisson_parallel.dir/poisson_parallel.cpp.o
 poisson_parallel: CMakeFiles/poisson_parallel.dir/build.make
-poisson_parallel: /home/mira/.openmpi/lib/libmpi_cxx.so
-poisson_parallel: /home/mira/.openmpi/lib/libmpi.so
-poisson_parallel: /home/mira/.openmpi/lib/libopen-rte.so
-poisson_parallel: /home/mira/.openmpi/lib/libopen-pal.so
-poisson_parallel: /usr/lib/x86_64-linux-gnu/libnsl.so
-poisson_parallel: /usr/lib/x86_64-linux-gnu/libutil.so
-poisson_parallel: /usr/lib/x86_64-linux-gnu/libm.so
-poisson_parallel: /usr/lib/x86_64-linux-gnu/libdl.so
+poisson_parallel: libcommon.a
+poisson_parallel: /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so
+poisson_parallel: /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so
 poisson_parallel: CMakeFiles/poisson_parallel.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/mira/Documents/NTNU/TMA4280-P2/TestRun/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable poisson_parallel"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/poisson_parallel.dir/link.txt --verbose=$(VERBOSE)

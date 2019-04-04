@@ -1,0 +1,1 @@
+/usr/bin/cc -std=c99  -fopenmp -O3 -DNDEBUG  -rdynamic CMakeFiles/poisson.dir/poisson.c.o  -o poisson libcommon.a -lgfortran -lm -lquadmath -lm 

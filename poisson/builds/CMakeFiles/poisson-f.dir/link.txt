@@ -1,0 +1,1 @@
+/usr/bin/gfortran    CMakeFiles/poisson-f.dir/poisson.f90.o  -o poisson-f libcommon.a 

@@ -17,7 +17,7 @@ if(MPI_FOUND)
   add_definitions(-DHAVE_MPI=1)
   set(INCLUDES ${INCLUDES} ${MPI_INCLUDE_PATH})
   set(DEPLIBS_C ${DEPLIBS_C} ${MPI_C_LIBRARIES})
-  set(DEPLIBS_F ${DEPLIBS_F} ${MPI_Fortran_LIBRARIES})
+  # set(DEPLIBS_F ${DEPLIBS_F} ${MPI_Fortran_LIBRARIES})
 endif()
 
 if(ENABLE_OPENMP)
@@ -41,7 +41,7 @@ add_library(common fst.f)
 add_executable(poisson poisson.c)
 
 # The Fortran based poisson application
-add_executable(poisson-f poisson.f90)
+# add_executable(poisson-f poisson.f90)
 
 # Link to libraries
 target_link_libraries(poisson common ${DEPLIBS_C})
@@ -50,4 +50,4 @@ target_link_libraries(poisson common ${DEPLIBS_C})
 set_target_properties(poisson PROPERTIES LINKER_LANGUAGE C)
 
 # Link to libraries
-target_link_libraries(poisson-f common ${DEPLIBS_F})
+# target_link_libraries(poisson-f common ${DEPLIBS_F})

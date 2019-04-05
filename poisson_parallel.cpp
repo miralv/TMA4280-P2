@@ -21,6 +21,7 @@
 #include <cmath>
 //#include <numeric>
 #include <valarray>
+#include <fstream>
 
 
 #define PI 3.14159265358979323846
@@ -97,42 +98,61 @@ int main(int argc, char **argv)
     // Distribute a block of rows to each process
     // Need to have control of global and local positions (?)
 
-    int *block_size = (int*) calloc(P,sizeof(int)); // block sizes
+    int *block_size = (int*) calloc(P,sizeof(int)); // block sizes, i.e. num rows
     int *block_size_sum = (int*) calloc(P, sizeof(int)); // sum of all block sizes i = 0, ..., i=i-1 control mechanism
     int *counts = (int*) calloc(P,sizeof(int)); // n elements in block ?
     int *displs = (int*) calloc(P,sizeof(int)); // global position
 
 
+    //cout<<"TEST:"<<endl;
+    //cout<<int(ceil(double(2)/1))<<endl;
+    //cout<<"TEST over"<<endl;
+    
 
-    block_size[0] = ceil(m/P);
+
+    block_size[0] = int(ceil(double(m)/P));
+    //cout << "m,P, ceil(m/P)"<< m << P << block_size[0]<<endl;
     block_size_sum[0] = 0;
     int rows_taken = 0;
 
     // Distribute using openmp
-    #pragma omp parallel for
+    // SOMETHING ODD IS HAPPENING HERE
+    // That is because the loops are NOT independent!
+    // #pragma omp parallel for
     for (size_t i=1; i<P; i++){
         rows_taken += block_size[i-1];
-        block_size[i] = ceil((m - rows_taken )/(P-1));
+        block_size[i] = int(ceil(double(m - rows_taken )/(P-i)));
         block_size_sum[i] = rows_taken;
-        }
+    }
 
 
 
     displs[0] = 0;
     counts[0] = block_size[rank]*block_size[0];
     int sum_counts = 0;
+    
+    cout<<"rank="<<rank<<endl;
+    cout<<"blocksize="<<block_size[rank]<<endl;
+    cout<<"counts og displs:\n";
+    cout<<counts[0]<<" "<<displs[0]<<endl;
+    
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
+    // remove parallel for as sum_counts is not independent
     for (size_t i=1; i<P; i++){
         sum_counts += counts[i-1];
         counts[i] = block_size[rank]*block_size[i]; // Num elements in block i = my number of rows*n_cols ????
         displs[i] = sum_counts; // Global position?
+        cout<<counts[i]<<" "<<displs[i]<<endl;
     }
 
     // Check that all m rows are distributed:
-    if (rank == 0){
-        cout<< "Check that all m rows are distributed:"<<endl;
-        
+    cout<< "Check that all m rows are distributed:"<<endl;
+    cout<<"Show blocksizes  and sums"<<endl;
+    for (int i = 0; i<P;i++){
+        cout<<"i="<<i<<" block_size[i]="<<block_size[i]<<" block_size_sum[i]"<<block_size_sum[i]<<endl;
+    }
+    if (rank == 0){        
         valarray<int> my_block_sizes (block_size, P);
         int rows_dist = my_block_sizes.sum();
         if (rows_dist != m){
@@ -147,6 +167,7 @@ int main(int argc, char **argv)
 
     /*
      * Grid points are generated with constant mesh size on both x- and y-axis.
+     * TODO: IS THIS CORRECT?
      */
     double *grid = mk_1D_array(n+1, false);
     #pragma omp parallel for
@@ -173,6 +194,7 @@ int main(int argc, char **argv)
      * The diagonal of the eigenvalue matrix of T is set with the eigenvalues
      * defined Chapter 9. page 93 of the Lecture Notes.
      * Note that the indexing starts from zero here, thus i+1.
+     * CORRECT?????
      */
     double *diag = mk_1D_array(m, false);
     #pragma omp parallel for
@@ -204,18 +226,20 @@ int main(int argc, char **argv)
     double u_max = 0.0;
 
 
+
     /*
      * Initialize the right hand side data for a given rhs function.
      * 
      */
 
     // Collapse the loop into one large iteration space    
-    // Do I need a pragma omp parallel outside?
-
-    #pragma omp for collapse(2)
-    for (size_t i = 0; i < block_size[rank]; i++) {
-        for (size_t j = 0; j < m; j++) {
-            b[i][j] = h * h * rhs(grid[block_size_sum[rank]+i], grid[j+1]);
+    #pragma omp parallel
+    {
+        #pragma omp for collapse(2)
+        for (size_t i = 0; i < block_size[rank]; i++) {
+            for (size_t j = 0; j < m; j++) {
+                b[i][j] = h * h * rhs(grid[block_size_sum[rank]+i], grid[j]);
+            }
         }
     }
 
@@ -235,9 +259,9 @@ int main(int argc, char **argv)
 
     //////////////////////////////////////////////////////////////////////
 
+
+    /* 
     if (n==5){
-        /* Unit test to check the the transpose operation is working properly
-        */
         double ** my_test_matrix = mk_2D_array(4, 4, false);
         double ** my_test_matrix_transpose = mk_2D_array(4, 4, false);
 
@@ -323,7 +347,7 @@ int main(int argc, char **argv)
         free(block_vec_b_pre_transp);
 
     }
-
+    */
 /////////////////////////////////////////////////////////////////////
 
 
@@ -356,12 +380,15 @@ int main(int argc, char **argv)
             }
         }
 
+        cout<<"First alltoall\n";
         // Broadcast data
         #pragma omp master 
         {
             MPI_Alltoallv(block_vec_b,counts,displs,MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
 
         }
+        cout<<"After first alltoall\n";
+
 
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
@@ -462,6 +489,7 @@ int main(int argc, char **argv)
         * norm.
         */
         double u_max_all;
+
         #pragma omp for reduction(max:u_max) collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
@@ -473,12 +501,15 @@ int main(int argc, char **argv)
             }
         }
 
+        cout<<"Hey there00\n";
 
         MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        cout<<"Hey there0\n";
 
         if (rank == 0){
             #pragma omp master
             {
+                cout<<"Hey there\n";
                 double time_used = MPI_Wtime() - time_start;
                 printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n", n, P, t, time_used, u_max_all);
             }
@@ -487,26 +518,21 @@ int main(int argc, char **argv)
 
     // Release memory
     // Why is it not necessary to release the rest?
+    //
     /*
     for (size_t i = 0; i<block_size[rank]; i++){
         free(bt[i]);
         free(b[i]);
     }
-    
-    free(block_vec_b);
-    free(block_vec_b_pre_transp);
-    free(block_vec_bt);
-    */
     free(block_vec_b);
     free(block_vec_bt);
     free(block_vec_b_pre_transp);
-
     
     free(displs);
     free(counts);
     free(block_size);
     free(block_size_sum);
-    
+    */
 
     MPI_Finalize();
 
@@ -519,7 +545,7 @@ int main(int argc, char **argv)
  */
 
 double rhs(double x, double y) {
-    return 1;
+    return 1.0;
 }
 
 /*

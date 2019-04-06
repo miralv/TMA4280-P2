@@ -109,8 +109,8 @@ int main(int argc, char **argv)
     //cout<<"TEST over"<<endl;
     
 
-
-    block_size[0] = int(ceil(double(m)/P));
+    // Let's let the first one be rounded down
+    block_size[0] = m/P;//int(ceil(double(m)/P));
     //cout << "m,P, ceil(m/P)"<< m << P << block_size[0]<<endl;
     block_size_sum[0] = 0;
     int rows_taken = 0;
@@ -351,6 +351,21 @@ int main(int argc, char **argv)
 /////////////////////////////////////////////////////////////////////
 
 
+    // Initialize b for debugging purposes.
+    int counter = 0;
+    for (int i =0; i<block_size[rank];i++){
+        for (int j=0; j<m; j++){
+            counter += 1;
+            b[i][j] = counter;
+        }
+    }
+    // Print b
+    for( int i =0; i<block_size[rank]; i++){
+        for (int j = 0; j<m; j++){
+            cout<<b[i][j]<<" ";
+        }
+        cout<<endl;
+    }
 
 
     double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
@@ -364,21 +379,33 @@ int main(int argc, char **argv)
         t = omp_get_num_threads();
         double *z = mk_1D_array(nn, false);
 
-
+/*
         // Find fst of b
+        cout<<"Before fst"<<endl;
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(b[i], &n, z, &nn);
         }
-        
+        cout<<"After fst"<<endl;
+  */      
+    int ind_k;
         // Reorder b from row-by-row to subrow-by-subrow
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
+                int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    block_vec_b[ displs[j] + i*block_size[j] + k] = b[i][k];
+                    //cout<<"pos:"<<displs[j] + i*block_size[j] + ind_k<<" b[i][k]"<<b[i][k]<<endl;
+                    block_vec_b[ displs[j] + i*block_size[j] + ind_k] = b[i][k];
+                    ind_k++;
                 }
             }
         }
+        cout<<"Print blockvec b"<<endl;
+        for(int i=0; i<block_size[rank]*m; i++){
+            cout<<block_vec_b[i]<<" ";
+        }
+        cout<<endl;
+
 
         cout<<"First alltoall\n";
         // Broadcast data
@@ -389,7 +416,7 @@ int main(int argc, char **argv)
         }
         cout<<"After first alltoall\n";
 
-
+    /*
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
             int M = counts[i]/block_size[i]; // Rows of orig block
@@ -421,6 +448,8 @@ int main(int argc, char **argv)
         /*
         * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
         */
+
+    /*
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
@@ -433,6 +462,7 @@ int main(int argc, char **argv)
         */
         
         // Apply fst on bt
+        /*
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(bt[i], &n, z, &nn);
         }
@@ -440,7 +470,7 @@ int main(int argc, char **argv)
         //Do the transpose procedure again.
         //transpose(b, bt, m);
 
-
+    /*
         // Reorder bt from row-by-row to subrow-by-subrow
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
@@ -488,6 +518,8 @@ int main(int argc, char **argv)
         * Compute maximal value of solution for convergence analysis in L_\infty
         * norm.
         */
+
+    /*
         double u_max_all;
 
         #pragma omp for reduction(max:u_max) collapse(2)
@@ -514,6 +546,7 @@ int main(int argc, char **argv)
                 printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n", n, P, t, time_used, u_max_all);
             }
         }
+        */
     } // end pragma
 
     // Release memory
@@ -533,6 +566,9 @@ int main(int argc, char **argv)
     free(block_size);
     free(block_size_sum);
     */
+    
+    
+    
 
     MPI_Finalize();
 

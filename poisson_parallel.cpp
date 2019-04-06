@@ -353,6 +353,9 @@ int main(int argc, char **argv)
 
     // Initialize b for debugging purposes.
     int counter = 0;
+    if (rank == 1){
+        counter = 100;
+    }
     for (int i =0; i<block_size[rank];i++){
         for (int j=0; j<m; j++){
             counter += 1;
@@ -415,6 +418,7 @@ int main(int argc, char **argv)
 
         }
         cout<<"After first alltoall\n";
+        /*
 
         cout<<"b received"<<endl;
         for( int i =0; i<block_size[rank]*m; i++){
@@ -422,6 +426,8 @@ int main(int argc, char **argv)
 
         }
         cout<<endl;
+        */
+        
 
     
         // Transpose block wise
@@ -449,9 +455,9 @@ int main(int argc, char **argv)
         //#pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
-                //int ind_k = 0;
+                int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    bt[i][k] = block_vec_bt[ displs[j] + i*block_size[j] + k];
+                    bt[i][k] = block_vec_bt[ displs[j] + i*block_size[j] + ind_k];
                     ind_k++;
                 }
             }
@@ -459,7 +465,7 @@ int main(int argc, char **argv)
 
 
         // Print bt
-        /*
+        
         cout<<"b transposed"<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
@@ -467,7 +473,7 @@ int main(int argc, char **argv)
             }
             cout<<endl;
         }
-        */
+        
         /*
         //transpose(bt, b, m);
         // Apply fstinv on bt

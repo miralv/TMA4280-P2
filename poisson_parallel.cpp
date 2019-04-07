@@ -35,6 +35,7 @@ double *mk_1D_array(size_t n, bool zero);
 double **mk_2D_array(size_t n1, size_t n2, bool zero);
 void transpose(double **bt, double **b, size_t m);
 double rhs(double x, double y);
+double rhs_alternative(double x, double y);
 double u_analytical(double x, double y);
 
 
@@ -51,11 +52,12 @@ extern "C" {
 
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
+    if (argc < 3) {
         printf("Usage:\n");
         printf("  poisson n\n\n");
         printf("Arguments:\n");
         printf("  n: the problem size (must be a power of 2)\n");
+        printf(" nthreads: number of openmp threads\n");
         return 1;
     }
 
@@ -66,30 +68,39 @@ int main(int argc, char **argv)
      *  - the number of degrees of freedom in each direction is m = n-1,
      *  - the mesh size is constant h = 1/n.
      */
+
+     
     int n = atoi(argv[1]);
-    if ((n & (n-1)) != 0 && n!=5) {
+    if ((n & (n-1)) != 0) {
       printf("n must be a power-of-two\n");
       return 2;
     }
-
+    int t = atoi(argv[2]); //number of threads
+    if (t<=0){
+        printf("t is not a positive integer\n");
+        return 3;
+    }
 
 
     int m = n - 1;
     double h = 1.0 / n;
 
     // The MPI section starts here 
-    int rank, P, t; // myrank, number of mpi mprocesses and number of threads
+    int rank, P; // rank, number of mpi mprocesses
     double time_start;
     MPI_Init(&argc,&argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&P);
 
-    // Assure that n > P
+    // Set number of threads
+
+
+    // Assure that m> P
 
     if (n-1<P) {
         cout<< "n-1 < P! This leads to some processes receiving zero rows."<<endl;
-        return 0;
+        return 4;
     }
 
     if (rank == 0) {
@@ -106,14 +117,8 @@ int main(int argc, char **argv)
     int *displs = (int*) calloc(P,sizeof(int)); // global position
 
 
-    //cout<<"TEST:"<<endl;
-    //cout<<int(ceil(double(2)/1))<<endl;
-    //cout<<"TEST over"<<endl;
-    
-
     // Let's let the first one be rounded down
     block_size[0] = m/P;//int(ceil(double(m)/P));
-    //cout << "m,P, ceil(m/P)"<< m << P << block_size[0]<<endl;
     block_size_sum[0] = 0;
     int rows_taken = 0;
 
@@ -230,8 +235,6 @@ int main(int argc, char **argv)
     int nn = 4 * n;
     double u_max = 0.0;
 
-
-
     /*
      * Initialize the right hand side data for a given rhs function.
      * 
@@ -241,6 +244,7 @@ int main(int argc, char **argv)
     // TODO: SJEKK DETTE: VIRKER SOM OM DET ER PROBLEMER HER
     // grid har n+1 punkter fra 0*h til n*h
     // the inner points are from i = 1 to i = n-1 = m
+    // regner kun ut de som er aktuelle for denne prosessen (altså denne radblokken)
     
     #pragma omp parallel
     {
@@ -271,100 +275,8 @@ int main(int argc, char **argv)
      */
 
 
-    //////////////////////////////////////////////////////////////////////
-
-
-    /* 
-    if (n==5){
-        double ** my_test_matrix = mk_2D_array(4, 4, false);
-        double ** my_test_matrix_transpose = mk_2D_array(4, 4, false);
-
-        my_test_matrix[0][0] = 1; 
-        my_test_matrix[0][1] = 2;
-        my_test_matrix[0][2] = 3;
-        my_test_matrix[0][3] = 4;
-        my_test_matrix[1][0] = 5; 
-        my_test_matrix[1][1] = 6;
-        my_test_matrix[1][2] = 7;
-        my_test_matrix[1][3] = 8; 
-        my_test_matrix[2][0] = 1;
-        my_test_matrix[2][1] = 2;
-        my_test_matrix[2][2] = 3;
-        my_test_matrix[2][3] = 4;
-        my_test_matrix[3][0] = 5;
-        my_test_matrix[3][1] = 6;
-        my_test_matrix[3][2] = 7;
-        my_test_matrix[3][3] = 8;
-        cout<<"Print test matrix:\n";
-        for (int i=0; i<4;i++){
-            for (int j=0; j<4;j++){
-                cout<<my_test_matrix[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-
-        double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
-        double *block_vec_b_pre_transp = mk_1D_array(block_size[rank]*m, false);
-        double *block_vec_bt= mk_1D_array(block_size[rank]*m, false);
-    
-    
-    
-    
-        // Reorder b from row-by-row to subrow-by-subrow
-        #pragma omp for collapse(2)
-        for (size_t i = 0; i < block_size[rank]; i++){
-            for (size_t j = 0; j<P; j++){
-                for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    block_vec_b[ displs[j] + i*block_size[j] + k] = my_test_matrix[i][k];
-                }
-            }
-        }
-
-        // Broadcast data
-        #pragma omp master 
-        {
-            MPI_Alltoallv(block_vec_b,counts,displs,MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
-
-        }
-
-        // Transpose block wise
-        for (size_t i = 0; i < P; i++){
-            int M = counts[i]/block_size[i]; // Rows of orig block
-            #pragma omp for collapse(2)
-            for (size_t j = 0; j<block_size[i]; j++){
-                for (size_t k =0; k<M; k++){
-                    block_vec_bt[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
-                }
-            }
-        }
-
-        // Reorder back from vector to matrix bt
-        #pragma omp for collapse(2)
-        for (size_t i = 0; i < block_size[rank]; i++){
-            for (size_t j = 0; j<P; j++){
-                for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    my_test_matrix_transpose[i][k] = block_vec_bt[ displs[j] + i*block_size[j] + k];
-                }
-            }
-        }    
-
-        cout<<"Print test matrix's transpose:\n";
-        for (int i=0; i<4;i++){
-            for (int j=0; j<4;j++){
-                cout<<my_test_matrix_transpose[i][j]<<" ";
-            }
-            cout<<endl;
-        }
-
-        free(block_vec_b);
-        free(block_vec_bt);
-        free(block_vec_b_pre_transp);
-
-    }
-    */
-/////////////////////////////////////////////////////////////////////
+   
 /*
-
     // Initialize b for debugging purposes.
     int counter = rank*100;
 
@@ -393,23 +305,39 @@ int main(int argc, char **argv)
     // Create a parallel section that lasts until the end of main
     #pragma omp parallel
     {
-        t = omp_get_num_threads();
+        //t = omp_get_num_threads();
         //t = 3;
         //omp_set_num_threads(t);
         //cout<<"We are using t="<<t<<" threads."<<endl;
-        double *z = mk_1D_array(nn, false);
+        // TODO: Burde være organisert annerledes?
+        //PRØVER
+        //double *z = mk_1D_array(nn, false);
+        double *z[t]; // create a z vector for each thread in this process
+
+        #pragma omp parallel for
+        for (int i = 0; i<t;i++){
+            z[i] = mk_1D_array(nn,false);
+        }
+/*
+        for (int i = 0; i<t; i++){
+            cout<<&z[i]<<" "<<endl;
+        }
+*/
+
+
 
 
         // Find fst of b
         //cout<<"Before fst"<<endl;
+        #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fst_(b[i], &n, z, &nn);
+            fst_(b[i], &n, z[omp_get_thread_num()], &nn);
         }
         //cout<<"After fst"<<endl;
         
-    int ind_k;
+        int ind_k;
         // Reorder b from row-by-row to subrow-by-subrow
-        #pragma omp for collapse(2)
+        // #pragma omp for collapse(2) NEW CHANGE
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
                 int ind_k = 0;
@@ -455,7 +383,7 @@ int main(int argc, char **argv)
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
             int M = counts[i]/block_size[i]; // Rows of orig block
-            //#pragma omp for collapse(2)
+            #pragma omp for collapse(2) //NEW CHANGE
             for (size_t j = 0; j<block_size[i]; j++){
                 for (size_t k =0; k<M; k++){
                     block_vec_bt[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
@@ -475,7 +403,7 @@ int main(int argc, char **argv)
 
         // Reorder back from vector to matrix bt
         //TODO: sjekk om vi kan kollapse her
-        //#pragma omp for collapse(2)
+        //#pragma omp for collapse(2) // 
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
                 int ind_k = 0;
@@ -499,9 +427,9 @@ int main(int argc, char **argv)
         
         //transpose(bt, b, m);
         // Apply fstinv on bt
-        
+        #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fstinv_(bt[i], &n, z, &nn);
+            fstinv_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
 
         /*
@@ -521,16 +449,16 @@ int main(int argc, char **argv)
         */
         
         // Apply fst on bt
-        
+        #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fst_(bt[i], &n, z, &nn);
+            fst_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
         //Do the transpose procedure again.
         //transpose(b, bt, m);
 
     
         // Reorder bt from row-by-row to subrow-by-subrow
-        #pragma omp for collapse(2)
+        //#pragma omp for collapse(2) NEW CHANGE
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
                 int ind_k = 0;
@@ -550,7 +478,7 @@ int main(int argc, char **argv)
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
             int M = counts[i]/block_size[i]; // Rows of orig block
-            //#pragma omp for collapse(2)
+            #pragma omp for collapse(2) // NEW CHANGE
             for (size_t j = 0; j<block_size[i]; j++){
                 for (size_t k =0; k<M; k++){
                     block_vec_b[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
@@ -559,7 +487,7 @@ int main(int argc, char **argv)
         }
 
         // Reorder back from vector to matrix
-        #pragma omp for collapse(2)
+        // #pragma omp for collapse(2) NEW CHANGE
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
                 int ind_k = 0;
@@ -574,8 +502,9 @@ int main(int argc, char **argv)
         
 
         // Apply fstinv on b
+        #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fstinv_(b[i], &n, z, &nn);
+            fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
         }
 
         /*
@@ -590,8 +519,9 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 // Write the if sentence more readable
-                if (u_max <= fabs(b[i][j]) - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1])){
-                    u_max = fabs(b[i][j] - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]));
+                if (u_max <= fabs(b[i][j])){
+                    u_max = fabs(b[i][j]);
+                    //u_max = fabs(b[i][j] - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]));
                 //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
                 }
             }
@@ -643,8 +573,11 @@ int main(int argc, char **argv)
  * This function is used for initializing the right-hand side of the equation.
  * Other functions can be defined to swtich between problem definitions.
  */
-
 double rhs(double x, double y) {
+    return 1.0;
+}
+
+double rhs_alternative(double x, double y) {
     return 5*PI*PI*sin(PI*x)*sin(2*PI*y);
 }
 

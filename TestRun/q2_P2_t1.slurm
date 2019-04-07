@@ -2,10 +2,10 @@
 #SBATCH --partition=WORKQ
 #SBATCH --time=00:05:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1	### Number of tasks (MPI Processes)
+#SBATCH --ntasks-per-node=2	### Number of tasks (MPI Processes)
 #SBATCH --cpus-per-task=1	### Number of threads per task (OMP threads)
 #SBATCH --job-name="test"
-#SBATCH --output="omp_zeta_1.out"
+#SBATCH --output="q2_P2_t1.out"
 #SBATCH --mail-user=miralv@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
@@ -23,8 +23,8 @@ make
 ###skriver ut n error duration
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 	
-for k in {3..14}
+for k in {6..14}
 do
 	n=$(echo $((2**$k)))
-	srun ./poisson_parallel $n $OMP_NUM_THREADS
+	mpirun -np 2 ./poisson_parallel $n $OMP_NUM_THREADS
 done

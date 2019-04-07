@@ -1,0 +1,27 @@
+
+Due to MODULEPATH changes the following have been reloaded:
+  1) ncurses/.6.0
+
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /lustre1/home/miralv/TMA4280-P2/TestRun
+[ 50%] Built target common
+[100%] Built target poisson_parallel
+for n = 64, P=2 and t = 1 we get: 
+ time: 6.758000e-03
+ e_max: 7.359615e-02
+for n = 128, P=2 and t = 1 we get: 
+ time: 2.615500e-02
+ e_max: 7.365255e-02
+for n = 256, P=2 and t = 1 we get: 
+ time: 1.099110e-01
+ e_max: 7.366665e-02
+for n = 512, P=2 and t = 1 we get: 
+ time: 4.790500e-01
+ e_max: 7.367018e-02
+for n = 1024, P=2 and t = 1 we get: 
+ time: 1.878276e+00
+ e_max: 7.367106e-02
+for n = 2048, P=2 and t = 1 we get: 
+ time: 8.058786e+00
+ e_max: 7.367128e-02

@@ -163,13 +163,13 @@ int main(int argc, char **argv)
     if (rank == 0){        
         valarray<int> my_block_sizes (block_size, P);
         int rows_dist = my_block_sizes.sum();
-        cout<< "Check that all m rows are distributed:"<<endl;
+        // cout<< "Check that all m rows are distributed:"<<endl;
 
         if (rows_dist != m){
             cout<<"rows distributed = "<<rows_dist<<" != m:"<<m<<endl;
         }
         else{
-            cout<<"OK"<<endl;
+           // cout<<"OK"<<endl;
         }
     }
 

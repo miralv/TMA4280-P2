@@ -35,6 +35,8 @@ double *mk_1D_array(size_t n, bool zero);
 double **mk_2D_array(size_t n1, size_t n2, bool zero);
 void transpose(double **bt, double **b, size_t m);
 double rhs(double x, double y);
+double u_analytical(double x, double y);
+
 
 extern "C" {
     // Functions implemented in FORTRAN in fst.f and called from C.
@@ -130,12 +132,12 @@ int main(int argc, char **argv)
     displs[0] = 0;
     counts[0] = block_size[rank]*block_size[0];
     int sum_counts = 0;
-    
+    /*
     cout<<"rank="<<rank<<endl;
     cout<<"blocksize="<<block_size[rank]<<endl;
     cout<<"counts og displs:\n";
     cout<<counts[0]<<" "<<displs[0]<<endl;
-    
+    */
 
     //#pragma omp parallel for
     // remove parallel for as sum_counts is not independent
@@ -143,18 +145,21 @@ int main(int argc, char **argv)
         sum_counts += counts[i-1];
         counts[i] = block_size[rank]*block_size[i]; // Num elements in block i = my number of rows*n_cols ????
         displs[i] = sum_counts; // Global position?
-        cout<<counts[i]<<" "<<displs[i]<<endl;
+        //cout<<counts[i]<<" "<<displs[i]<<endl;
     }
 
-    // Check that all m rows are distributed:
+/*    // Check that all m rows are distributed:
     cout<< "Check that all m rows are distributed:"<<endl;
     cout<<"Show blocksizes  and sums"<<endl;
     for (int i = 0; i<P;i++){
         cout<<"i="<<i<<" block_size[i]="<<block_size[i]<<" block_size_sum[i]"<<block_size_sum[i]<<endl;
     }
+    */
     if (rank == 0){        
         valarray<int> my_block_sizes (block_size, P);
         int rows_dist = my_block_sizes.sum();
+        cout<< "Check that all m rows are distributed:"<<endl;
+
         if (rows_dist != m){
             cout<<"rows distributed = "<<rows_dist<<" != m:"<<m<<endl;
         }
@@ -233,18 +238,27 @@ int main(int argc, char **argv)
      */
 
     // Collapse the loop into one large iteration space    
+    // TODO: SJEKK DETTE: VIRKER SOM OM DET ER PROBLEMER HER
+    // grid har n+1 punkter fra 0*h til n*h
+    // the inner points are from i = 1 to i = n-1 = m
+    
     #pragma omp parallel
     {
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
-                b[i][j] = h * h * rhs(grid[block_size_sum[rank]+i], grid[j]);
+                b[i][j] = h * h * rhs(grid[block_size_sum[rank]+i+1], grid[j+1]);
             }
         }
     }
-
-
-
+/*
+    for( int i =0; i<block_size[rank]; i++){
+        for (int j = 0; j<m; j++){
+            cout<<b[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+*/
     /*
      * Compute \tilde G^T = S^-1 * (S * G)^T (Chapter 9. page 101 step 1)
      * Instead of using two matrix-matrix products the Discrete Sine Transform
@@ -349,13 +363,11 @@ int main(int argc, char **argv)
     }
     */
 /////////////////////////////////////////////////////////////////////
-
+/*
 
     // Initialize b for debugging purposes.
-    int counter = 0;
-    if (rank == 1){
-        counter = 100;
-    }
+    int counter = rank*100;
+
     for (int i =0; i<block_size[rank];i++){
         for (int j=0; j<m; j++){
             counter += 1;
@@ -369,27 +381,32 @@ int main(int argc, char **argv)
         }
         cout<<endl;
     }
-
+*/
 
     double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
     double *block_vec_b_pre_transp = mk_1D_array(block_size[rank]*m, false);
     double *block_vec_bt= mk_1D_array(block_size[rank]*m, false);
 
+    //TODO: Should z be stored in different versions for each thread?
+    // Will try without first
 
     // Create a parallel section that lasts until the end of main
     #pragma omp parallel
     {
         t = omp_get_num_threads();
+        //t = 3;
+        //omp_set_num_threads(t);
+        //cout<<"We are using t="<<t<<" threads."<<endl;
         double *z = mk_1D_array(nn, false);
 
-/*
+
         // Find fst of b
-        cout<<"Before fst"<<endl;
+        //cout<<"Before fst"<<endl;
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(b[i], &n, z, &nn);
         }
-        cout<<"After fst"<<endl;
-  */      
+        //cout<<"After fst"<<endl;
+        
     int ind_k;
         // Reorder b from row-by-row to subrow-by-subrow
         #pragma omp for collapse(2)
@@ -403,30 +420,35 @@ int main(int argc, char **argv)
                 }
             }
         }
+        /*
         cout<<"Print blockvec b"<<endl;
         for(int i=0; i<block_size[rank]*m; i++){
             cout<<block_vec_b[i]<<" ";
         }
         cout<<endl;
+        */
 
 
-        cout<<"First alltoall\n";
+        //cout<<"First alltoall\n";
         // Broadcast data
         #pragma omp master 
         {
             MPI_Alltoallv(block_vec_b,counts,displs,MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
 
         }
-        cout<<"After first alltoall\n";
+        //cout<<"After first alltoall\n";
         /*
-
         cout<<"b received"<<endl;
         for( int i =0; i<block_size[rank]*m; i++){
             cout<<block_vec_b_pre_transp[i]<<" ";
 
         }
         cout<<endl;
+
         */
+
+
+        
         
 
     
@@ -438,20 +460,21 @@ int main(int argc, char **argv)
                 for (size_t k =0; k<M; k++){
                     block_vec_bt[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
                     // block_vec_bt[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
-                    cout<<"pos:"<<displs[i] + k*block_size[i] + j<<" displs[i] + M*j + k]"<<displs[i] + M*j + k<<endl;
+                    //cout<<"pos:"<<displs[i] + k*block_size[i] + j<<" displs[i] + M*j + k]"<<displs[i] + M*j + k<<endl;
                 }
             }
         }
-
+        /*
         cout<<"Print blockvec b_t"<<endl;
         for(int i=0; i<block_size[rank]*m; i++){
             cout<<block_vec_bt[i]<<" ";
         }
         cout<<endl;
-
+        */
         
 
         // Reorder back from vector to matrix bt
+        //TODO: sjekk om vi kan kollapse her
         //#pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
@@ -465,18 +488,18 @@ int main(int argc, char **argv)
 
 
         // Print bt
-        
-        cout<<"b transposed"<<endl;
+        /*cout<<"b transposed rank"<<rank<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
                 cout<<bt[i][j]<<" ";
             }
             cout<<endl;
-        }
+        }*/
         
-        /*
+        
         //transpose(bt, b, m);
         // Apply fstinv on bt
+        
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(bt[i], &n, z, &nn);
         }
@@ -485,7 +508,7 @@ int main(int argc, char **argv)
         * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
         */
 
-    /*
+
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
@@ -498,35 +521,36 @@ int main(int argc, char **argv)
         */
         
         // Apply fst on bt
-        /*
+        
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(bt[i], &n, z, &nn);
         }
-
         //Do the transpose procedure again.
         //transpose(b, bt, m);
 
-    /*
+    
         // Reorder bt from row-by-row to subrow-by-subrow
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
+                int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    block_vec_bt[ displs[j] + i*block_size[j] + k] = bt[i][k];
+                    block_vec_bt[ displs[j] + i*block_size[j] + ind_k] = bt[i][k];
                 }
             }
         }
 
+        
         // Broadcast data
         #pragma omp master 
         {
             MPI_Alltoallv(block_vec_bt, counts, displs, MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
         }
-
+        
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
             int M = counts[i]/block_size[i]; // Rows of orig block
-            #pragma omp for collapse(2)
+            //#pragma omp for collapse(2)
             for (size_t j = 0; j<block_size[i]; j++){
                 for (size_t k =0; k<M; k++){
                     block_vec_b[ displs[i] + k*block_size[i] + j] = block_vec_b_pre_transp[displs[i] + M*j + k];
@@ -538,12 +562,16 @@ int main(int argc, char **argv)
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
+                int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                    b[i][k] = block_vec_b[ displs[j] + i*block_size[j] + k];
+                    b[i][k] = block_vec_b[ displs[j] + i*block_size[j] + ind_k];
+                    ind_k++;
                 }
             }
-        }    
-        // Transpose finished
+        }
+
+        // Transpose ++ finished
+        
 
         // Apply fstinv on b
         for (size_t i = 0; i < block_size[rank]; i++) {
@@ -555,34 +583,34 @@ int main(int argc, char **argv)
         * norm.
         */
 
-    /*
+    
         double u_max_all;
 
         #pragma omp for reduction(max:u_max) collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 // Write the if sentence more readable
-                if (u_max <= fabs(b[i][j])){
-                    u_max = fabs(b[i][j]);
-                }
+                if (u_max <= fabs(b[i][j]) - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1])){
+                    u_max = fabs(b[i][j] - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]));
                 //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
+                }
             }
         }
+        #pragma omp master
+        {
+            MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
-        cout<<"Hey there00\n";
+        }
 
-        MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-        cout<<"Hey there0\n";
 
         if (rank == 0){
             #pragma omp master
             {
-                cout<<"Hey there\n";
                 double time_used = MPI_Wtime() - time_start;
-                printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n", n, P, t, time_used, u_max_all);
+                printf("for n = %i, P=%i and t = %i we get: \n time: %e\n e_max: %e\n", n, P, t, time_used, u_max_all);
             }
         }
-        */
+        
     } // end pragma
 
     // Release memory
@@ -617,8 +645,18 @@ int main(int argc, char **argv)
  */
 
 double rhs(double x, double y) {
-    return 1.0;
+    return 5*PI*PI*sin(PI*x)*sin(2*PI*y);
 }
+
+/*
+ * This function is calculating the corresponding analytical u
+ */
+
+double u_analytical(double x, double y){
+    return sin(PI*x)*sin(PI*y);
+}
+
+
 
 /*
  * Write the transpose of b a matrix of R^(m*m) in bt.

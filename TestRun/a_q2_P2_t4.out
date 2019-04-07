@@ -1,0 +1,31 @@
+
+Due to MODULEPATH changes the following have been reloaded:
+  1) ncurses/.6.0
+
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /lustre1/home/miralv/TMA4280-P2/TestRun
+[ 50%] Built target common
+[100%] Built target poisson_parallel
+for n = 64, P=2 and t = 4 we get: 
+ time: 2.373100e-02
+ e_max: 4.986513e-04
+for n = 128, P=2 and t = 4 we get: 
+ time: 9.486200e-02
+ e_max: 7.770847e-05
+for n = 256, P=2 and t = 4 we get: 
+ time: 4.158530e-01
+ e_max: 2.654061e-03
+for n = 512, P=2 and t = 4 we get: 
+ time: 1.752203e+00
+ e_max: 3.183089e-01
+for n = 1024, P=2 and t = 4 we get: 
+ time: 7.448663e+00
+ e_max: 3.183096e-01
+for n = 2048, P=2 and t = 4 we get: 
+ time: 3.178858e+01
+ e_max: 3.183098e-01
+for n = 4096, P=2 and t = 4 we get: 
+ time: 1.358832e+02
+ e_max: 3.183099e-01
+slurmstepd: error: *** JOB 251571 ON compute-1-0-19 CANCELLED AT 2019-04-07T20:21:13 DUE TO TIME LIMIT ***

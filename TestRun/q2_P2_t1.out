@@ -25,3 +25,10 @@ for n = 1024, P=2 and t = 1 we get:
 for n = 2048, P=2 and t = 1 we get: 
  time: 8.058786e+00
  e_max: 7.367128e-02
+for n = 4096, P=2 and t = 1 we get: 
+ time: 3.508335e+01
+ e_max: 7.367133e-02
+for n = 8192, P=2 and t = 1 we get: 
+ time: 1.480692e+02
+ e_max: 7.367135e-02
+slurmstepd: error: *** JOB 251567 ON compute-1-0-19 CANCELLED AT 2019-04-07T20:15:13 DUE TO TIME LIMIT ***

@@ -10,11 +10,13 @@ set(CMAKE_C_COMPILER_ID "GNU")
 
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_C
+  "HAVE_MPI=1"
   "HAVE_OPENMP=1"
   )
 
 # The include file search paths:
 set(CMAKE_C_TARGET_INCLUDE_PATH
+  "/home/mira/.openmpi/include"
   )
 
 # Targets to which this target links.

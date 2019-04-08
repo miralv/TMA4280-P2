@@ -6,11 +6,3 @@
 
 #IncludeRegexTransform: 
 
-/home/mira/Documents/NTNU/TMA4280-P2/poisson/poisson.c
-stdlib.h
--
-stdio.h
--
-math.h
--
-

@@ -292,25 +292,25 @@ MPI_C_LINK_FLAGS:STRING=-Wl,--export-dynamic -pthread
 MPI_Fortran_ADDITIONAL_INCLUDE_DIRS:STRING=
 
 //MPI compiler for Fortran
-MPI_Fortran_COMPILER:FILEPATH=MPI_Fortran_COMPILER-NOTFOUND
+MPI_Fortran_COMPILER:FILEPATH=/home/mira/.openmpi/bin/mpif90
 
 //MPI Fortran compilation definitions
 MPI_Fortran_COMPILE_DEFINITIONS:STRING=
 
-//MPI Fortran compilation flags
-MPI_Fortran_COMPILE_OPTIONS:STRING=
+//MPI Fortran compilation options
+MPI_Fortran_COMPILE_OPTIONS:STRING=-pthread
 
 //Path to a file.
-MPI_Fortran_F77_HEADER_DIR:PATH=MPI_Fortran_F77_HEADER_DIR-NOTFOUND
+MPI_Fortran_F77_HEADER_DIR:PATH=/home/mira/.openmpi/include
 
 //MPI Fortran libraries to link against
-MPI_Fortran_LIB_NAMES:STRING=
+MPI_Fortran_LIB_NAMES:STRING=mpi_f90;mpi_f77;mpi;open-rte;open-pal;nsl;util;m;dl
 
 //MPI Fortran linker flags
-MPI_Fortran_LINK_FLAGS:STRING=
+MPI_Fortran_LINK_FLAGS:STRING=-Wl,--export-dynamic -pthread
 
 //Path to a file.
-MPI_Fortran_MODULE_DIR:PATH=MPI_Fortran_MODULE_DIR-NOTFOUND
+MPI_Fortran_MODULE_DIR:PATH=/home/mira/.openmpi/lib
 
 //Location of the dl library for MPI
 MPI_dl_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libdl.so
@@ -323,6 +323,12 @@ MPI_mpi_LIBRARY:FILEPATH=/home/mira/.openmpi/lib/libmpi.so
 
 //Location of the mpi_cxx library for MPI
 MPI_mpi_cxx_LIBRARY:FILEPATH=/home/mira/.openmpi/lib/libmpi_cxx.so
+
+//Location of the mpi_f77 library for MPI
+MPI_mpi_f77_LIBRARY:FILEPATH=/home/mira/.openmpi/lib/libmpi_f77.so
+
+//Location of the mpi_f90 library for MPI
+MPI_mpi_f90_LIBRARY:FILEPATH=/home/mira/.openmpi/lib/libmpi_f90.so
 
 //Location of the nsl library for MPI
 MPI_nsl_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libnsl.so
@@ -524,10 +530,14 @@ CMAKE_STRIP-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding MPI
+FIND_PACKAGE_MESSAGE_DETAILS_MPI:INTERNAL=[TRUE][TRUE][TRUE][c ][v2.1()]
 //Details about finding MPI_C
 FIND_PACKAGE_MESSAGE_DETAILS_MPI_C:INTERNAL=[/home/mira/.openmpi/lib/libmpi.so][/home/mira/.openmpi/lib/libopen-rte.so][/home/mira/.openmpi/lib/libopen-pal.so][/usr/lib/x86_64-linux-gnu/libnsl.so][/usr/lib/x86_64-linux-gnu/libutil.so][/usr/lib/x86_64-linux-gnu/libm.so][/usr/lib/x86_64-linux-gnu/libdl.so][mpi;open-rte;open-pal;nsl;util;m;dl][/home/mira/.openmpi/include][TRUE][v2.1()]
 //Details about finding MPI_CXX
 FIND_PACKAGE_MESSAGE_DETAILS_MPI_CXX:INTERNAL=[/home/mira/.openmpi/lib/libmpi_cxx.so][/home/mira/.openmpi/lib/libmpi.so][/home/mira/.openmpi/lib/libopen-rte.so][/home/mira/.openmpi/lib/libopen-pal.so][/usr/lib/x86_64-linux-gnu/libnsl.so][/usr/lib/x86_64-linux-gnu/libutil.so][/usr/lib/x86_64-linux-gnu/libm.so][/usr/lib/x86_64-linux-gnu/libdl.so][mpi_cxx;mpi;open-rte;open-pal;nsl;util;m;dl][/home/mira/.openmpi/include][TRUE][v2.1()]
+//Details about finding MPI_Fortran
+FIND_PACKAGE_MESSAGE_DETAILS_MPI_Fortran:INTERNAL=[/home/mira/.openmpi/lib/libmpi_f90.so][/home/mira/.openmpi/lib/libmpi_f77.so][/home/mira/.openmpi/lib/libmpi.so][/home/mira/.openmpi/lib/libopen-rte.so][/home/mira/.openmpi/lib/libopen-pal.so][/usr/lib/x86_64-linux-gnu/libnsl.so][/usr/lib/x86_64-linux-gnu/libutil.so][/usr/lib/x86_64-linux-gnu/libm.so][/usr/lib/x86_64-linux-gnu/libdl.so][mpi_f90;mpi_f77;mpi;open-rte;open-pal;nsl;util;m;dl][TRUE][v2.1()]
 //Details about finding OpenMP
 FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][TRUE][TRUE][c ][v()]
 //Details about finding OpenMP_C
@@ -599,13 +609,15 @@ MPI_RESULT_CXX_test_mpi_normal:INTERNAL=TRUE
 //Result of TRY_COMPILE
 MPI_RESULT_C_test_mpi_normal:INTERNAL=TRUE
 //Result of TRY_COMPILE
+MPI_RESULT_Fortran_mpiver_F90_MODULE:INTERNAL=TRUE
+//Result of TRY_COMPILE
 MPI_RESULT_Fortran_test_mpi_F08_MODULE:INTERNAL=FALSE
 //Result of TRY_COMPILE
-MPI_RESULT_Fortran_test_mpi_F77_HEADER:INTERNAL=FALSE
+MPI_RESULT_Fortran_test_mpi_F77_HEADER:INTERNAL=TRUE
 //Result of TRY_COMPILE
 MPI_RESULT_Fortran_test_mpi_F77_HEADER_NOKIND:INTERNAL=FALSE
 //Result of TRY_COMPILE
-MPI_RESULT_Fortran_test_mpi_F90_MODULE:INTERNAL=FALSE
+MPI_RESULT_Fortran_test_mpi_F90_MODULE:INTERNAL=TRUE
 //ADVANCED property for variable: MPI_dl_LIBRARY
 MPI_dl_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MPI_m_LIBRARY
@@ -614,6 +626,10 @@ MPI_m_LIBRARY-ADVANCED:INTERNAL=1
 MPI_mpi_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MPI_mpi_cxx_LIBRARY
 MPI_mpi_cxx_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MPI_mpi_f77_LIBRARY
+MPI_mpi_f77_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: MPI_mpi_f90_LIBRARY
+MPI_mpi_f90_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MPI_nsl_LIBRARY
 MPI_nsl_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: MPI_open-pal_LIBRARY

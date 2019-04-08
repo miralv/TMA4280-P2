@@ -4,7 +4,7 @@
 # compile Fortran with /usr/bin/gfortran
 Fortran_FLAGS =  
 
-Fortran_DEFINES = -DHAVE_OPENMP=1
+Fortran_DEFINES = -DHAVE_MPI=1 -DHAVE_OPENMP=1
 
-Fortran_INCLUDES = 
+Fortran_INCLUDES = -I/home/mira/.openmpi/include 
 

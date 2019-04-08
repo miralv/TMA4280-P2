@@ -251,7 +251,7 @@ int main(int argc, char **argv)
         #pragma omp for collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
-                b[i][j] = h * h * rhs(grid[block_size_sum[rank]+i+1], grid[j+1]);
+                b[i][j] = h * h * rhs_alternative(grid[block_size_sum[rank]+i+1], grid[j+1]);
             }
         }
     }
@@ -311,13 +311,14 @@ int main(int argc, char **argv)
         //cout<<"We are using t="<<t<<" threads."<<endl;
         // TODO: Burde være organisert annerledes?
         //PRØVER
-        //double *z = mk_1D_array(nn, false);
-        double *z[t]; // create a z vector for each thread in this process
-
+        double *z = mk_1D_array(nn, false);
+        //double *z[t]; // create a z vector for each thread in this process
+/*
         #pragma omp parallel for
         for (int i = 0; i<t;i++){
             z[i] = mk_1D_array(nn,false);
         }
+        */
 /*
         for (int i = 0; i<t; i++){
             cout<<&z[i]<<" "<<endl;
@@ -325,13 +326,30 @@ int main(int argc, char **argv)
 */
 
 
+        double *w[t];
+        #pragma omp parallel for
+        for (int i = 0; i<t;i++){
+            w[i] = mk_1D_array(4,false);
+            w[i][0]=i;
+            w[i][1]=i+1;
+            w[i][2]=i+2;
+            w[i][3]=i+3;
+        }
+
+        for (int i = 0; i<t; i++){
+            for (int j = 0; j< 4; j++){
+                cout<<w[i][j]<<" ";            
+            }
+            cout <<endl;
+        }
+        cout<<"\n\n";   
 
 
         // Find fst of b
         //cout<<"Before fst"<<endl;
-        #pragma omp parallel for num_threads(t)
+        //#pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fst_(b[i], &n, z[omp_get_thread_num()], &nn);
+            fst_(b[i], &n, z, &nn);
         }
         //cout<<"After fst"<<endl;
         
@@ -427,9 +445,9 @@ int main(int argc, char **argv)
         
         //transpose(bt, b, m);
         // Apply fstinv on bt
-        #pragma omp parallel for num_threads(t)
+        // #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fstinv_(bt[i], &n, z[omp_get_thread_num()], &nn);
+            fstinv_(bt[i], &n, z, &nn);
         }
 
         /*
@@ -449,9 +467,9 @@ int main(int argc, char **argv)
         */
         
         // Apply fst on bt
-        #pragma omp parallel for num_threads(t)
+        //#pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fst_(bt[i], &n, z[omp_get_thread_num()], &nn);
+            fst_(bt[i], &n, z, &nn);
         }
         //Do the transpose procedure again.
         //transpose(b, bt, m);
@@ -502,9 +520,9 @@ int main(int argc, char **argv)
         
 
         // Apply fstinv on b
-        #pragma omp parallel for num_threads(t)
+        //#pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
-            fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
+            fstinv_(b[i], &n, z, &nn);
         }
 
         /*
@@ -519,13 +537,15 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 // Write the if sentence more readable
-                if (u_max <= fabs(b[i][j])){
-                    u_max = fabs(b[i][j]);
-                    //u_max = fabs(b[i][j] - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]));
+                if (u_max <= fabs(b[i][j]- u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]))){
+                    //u_max = fabs(b[i][j]);
+                    u_max = fabs(b[i][j] - u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]));
                 //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
                 }
             }
         }
+
+
         #pragma omp master
         {
             MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -578,7 +598,7 @@ double rhs(double x, double y) {
 }
 
 double rhs_alternative(double x, double y) {
-    return 5*PI*PI*sin(PI*x)*sin(2*PI*y);
+    return 5.0*PI*PI*sin(PI*x)*sin(2.0*PI*y);
 }
 
 /*
@@ -586,7 +606,7 @@ double rhs_alternative(double x, double y) {
  */
 
 double u_analytical(double x, double y){
-    return sin(PI*x)*sin(PI*y);
+    return sin(PI*x)*sin(2.0*PI*y);
 }
 
 

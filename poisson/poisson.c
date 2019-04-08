@@ -158,6 +158,7 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < m; i++) {
         for (size_t j = 0; j < m; j++) {
             //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
+            // printf(" b = %e  u = %e ",b[i][j],u_analytical(grid[i + 1], grid[j + 1]));
             if (u_max <= fabs(b[i][j])){
                 u_max = fabs(b[i][j]);
             }
@@ -166,7 +167,9 @@ int main(int argc, char **argv)
                 e_max = fabs(b[i][j] - u_analytical(grid[i + 1], grid[j + 1]));
             }
         }
+        // printf("\n");
     }
+    // printf("\n");
     printf("u_max = %e\ne_max = %e\n", u_max, e_max);
 
     return 0;

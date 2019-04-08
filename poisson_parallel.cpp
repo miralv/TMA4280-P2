@@ -452,15 +452,22 @@ int main(int argc, char **argv)
         #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
+            cout <<"i"<<i<<" omp_get_thread_num"<<omp_get_thread_num()<<endl;
+
         }
 
 
         double u_max_all;
         double e_max_all;
 
-        #pragma omp for reduction(max:u_max) collapse(2)
+        // cout<<"rank:"<<rank<<" block_size_sum[rank]"<< block_size_sum[rank]<<" "<<grid[block_size_sum[rank]]<<endl;
+        #pragma omp for reduction(max:u_max) //collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
+                //cout<<"grid"<<grid[i+1]<<grid[j+1]<<" ";
+                if (rank == 0){
+                    cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
+                }
                 // Stability test in infinity norm
                 if (u_max <= fabs(b[i][j])){
                     u_max = fabs(b[i][j]);
@@ -471,6 +478,7 @@ int main(int argc, char **argv)
                 }
 
             }
+            cout<<endl;
         }
         #pragma omp master
         {
@@ -498,13 +506,11 @@ int main(int argc, char **argv)
     free(block_vec_b);
     free(block_vec_bt);
     free(block_vec_b_pre_transp);
-    
+    */
     free(displs);
     free(counts);
     free(block_size);
     free(block_size_sum);
-    */
-    
     
     
 

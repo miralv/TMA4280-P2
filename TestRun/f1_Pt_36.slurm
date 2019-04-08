@@ -1,17 +1,18 @@
 #!/bin/sh
 #SBATCH --partition=WORKQ
-#SBATCH --time=00:05:00
+#SBATCH --time=00:08:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2	### Number of tasks (MPI Processes)
-#SBATCH --cpus-per-task=2	### Number of threads per task (OMP threads)
-#SBATCH --job-name="test"
-#SBATCH --output="a_q2_P2_t2.out"
+#SBATCH --ntasks-per-node=36	### Number of tasks (MPI Processes)
+#SBATCH --cpus-per-task=1	### Number of threads per task (OMP threads)
+#SBATCH --job-name="Pt_36"
+#SBATCH --output="P_36.out"
 #SBATCH --mail-user=miralv@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR} 
 
+### Test the model for Pt = 36. 
 module purge
 module load GCC/5.4.0-2.26
 module load CMake/3.5.2
@@ -23,8 +24,5 @@ make
 ###skriver ut n error duration
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 	
-for k in {6..13}
-do
-	n=$(echo $((2**$k)))
-	mpirun -np 2 ./poisson_parallel $n $OMP_NUM_THREADS
-done
+n=$(echo $((2**14)))
+mpirun -np 36 ./poisson_parallel $n $OMP_NUM_THREADS

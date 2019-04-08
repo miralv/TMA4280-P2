@@ -25,3 +25,4 @@ for n = 1024, P=2 and t = 8 we get:
 for n = 2048, P=2 and t = 8 we get: 
  time: 6.391584e+01
  e_max: 3.259493e+02
+slurmstepd: error: *** JOB 251572 ON compute-1-0-21 CANCELLED AT 2019-04-07T20:22:13 DUE TO TIME LIMIT ***

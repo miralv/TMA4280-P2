@@ -3,9 +3,9 @@
 #SBATCH --time=00:05:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=2	### Number of tasks (MPI Processes)
-#SBATCH --cpus-per-task=2	### Number of threads per task (OMP threads)
+#SBATCH --cpus-per-task=4	### Number of threads per task (OMP threads)
 #SBATCH --job-name="test"
-#SBATCH --output="a_q2_P2_t2.out"
+#SBATCH --output="a_q2_P2_t4.out"
 #SBATCH --mail-user=miralv@stud.ntnu.no
 #SBATCH --mail-type=ALL
 

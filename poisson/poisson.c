@@ -2,7 +2,7 @@
  * C program to solve the two-dimensional Poisson equation on
  * a unit square using one-dimensional eigenvalue decompositions
  * and fast sine transforms.
- *
+ * MODIFIED TO USE A DIFFERENT RHS-function
  * Einar M. Rønquist
  * NTNU, October 2000
  * Revised, October 2001
@@ -25,6 +25,8 @@ real *mk_1D_array(size_t n, bool zero);
 real **mk_2D_array(size_t n1, size_t n2, bool zero);
 void transpose(real **bt, real **b, size_t m);
 real rhs(real x, real y);
+real rhs_alternative(real x, real y);
+real u_analytical(real x, real y);
 
 // Functions implemented in FORTRAN in fst.f and called from C.
 // The trailing underscore comes from a convention for symbol names, called name
@@ -105,7 +107,7 @@ int main(int argc, char **argv)
      */
     for (size_t i = 0; i < m; i++) {
         for (size_t j = 0; j < m; j++) {
-            b[i][j] = h * h * rhs(grid[i+1], grid[j+1]);
+            b[i][j] = h * h * rhs_alternative(grid[i+1], grid[j+1]);
         }
     }
 
@@ -152,13 +154,20 @@ int main(int argc, char **argv)
      * norm.
      */
     double u_max = 0.0;
+    double e_max = 0.0;
     for (size_t i = 0; i < m; i++) {
         for (size_t j = 0; j < m; j++) {
-            u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
+            //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
+            if (u_max <= fabs(b[i][j])){
+                u_max = fabs(b[i][j]);
+            }
+            // Verification test
+            if (e_max <= fabs(b[i][j] - u_analytical(grid[i + 1], grid[j + 1]))){
+                e_max = fabs(b[i][j] - u_analytical(grid[i + 1], grid[j + 1]));
+            }
         }
     }
-
-    printf("u_max = %e\n", u_max);
+    printf("u_max = %e\ne_max = %e\n", u_max, e_max);
 
     return 0;
 }
@@ -170,6 +179,18 @@ int main(int argc, char **argv)
 
 real rhs(real x, real y) {
     return 1;
+}
+
+real rhs_alternative(real x, real y) {
+    return 5.0*PI*PI*sin(PI*x)*sin(2.0*PI*y);
+}
+
+/*
+ * This function is calculating the corresponding analytical u
+ */
+
+real u_analytical(real x, real y){
+    return sin(PI*x)*sin(2.0*PI*y);
 }
 
 /*

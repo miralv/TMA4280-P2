@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_FLAGS = -std=c99  -fopenmp -O3 -DNDEBUG  
 
-C_DEFINES = -DHAVE_OPENMP=1
+C_DEFINES = -DHAVE_MPI=1 -DHAVE_OPENMP=1
 
-C_INCLUDES = 
+C_INCLUDES = -I/home/mira/.openmpi/include 
 

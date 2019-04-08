@@ -80,6 +80,13 @@ poisson_EXTERNAL_OBJECTS =
 poisson: CMakeFiles/poisson.dir/poisson.c.o
 poisson: CMakeFiles/poisson.dir/build.make
 poisson: libcommon.a
+poisson: /home/mira/.openmpi/lib/libmpi.so
+poisson: /home/mira/.openmpi/lib/libopen-rte.so
+poisson: /home/mira/.openmpi/lib/libopen-pal.so
+poisson: /usr/lib/x86_64-linux-gnu/libnsl.so
+poisson: /usr/lib/x86_64-linux-gnu/libutil.so
+poisson: /usr/lib/x86_64-linux-gnu/libm.so
+poisson: /usr/lib/x86_64-linux-gnu/libdl.so
 poisson: CMakeFiles/poisson.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/mira/Documents/NTNU/TMA4280-P2/poisson/builds/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C executable poisson"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/poisson.dir/link.txt --verbose=$(VERBOSE)

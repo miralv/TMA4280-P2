@@ -1,1 +1,1 @@
-/usr/bin/cc -std=c99  -fopenmp -O3 -DNDEBUG  -rdynamic CMakeFiles/poisson.dir/poisson.c.o  -o poisson libcommon.a -lgfortran -lm -lquadmath -lm 
+/usr/bin/cc -std=c99  -fopenmp -O3 -DNDEBUG  -rdynamic CMakeFiles/poisson.dir/poisson.c.o  -o poisson -Wl,-rpath,/home/mira/.openmpi/lib libcommon.a /home/mira/.openmpi/lib/libmpi.so /home/mira/.openmpi/lib/libopen-rte.so /home/mira/.openmpi/lib/libopen-pal.so -lnsl -lutil -lm -ldl -lgfortran -lm -lquadmath -lm 

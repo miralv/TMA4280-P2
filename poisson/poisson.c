@@ -124,10 +124,22 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < m; i++) {
         fst_(b[i], &n, z, &nn);
     }
+
+
     transpose(bt, b, m);
+
+    for (size_t i = 0; i < m; i++){
+        for (size_t j = 0; j < m; j++){
+            printf("%e  ",bt[i][j]);
+        }
+        printf("\n");
+
+    }
     for (size_t i = 0; i < m; i++) {
         fstinv_(bt[i], &n, z, &nn);
     }
+
+
 
     /*
      * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)

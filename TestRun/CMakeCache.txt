@@ -220,6 +220,12 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//No help, variable specified on the command line.
+ENABLE_MPI:UNINITIALIZED=0
+
+//No help, variable specified on the command line.
+ENABLE_OPENMP:UNINITIALIZED=0
+
 //Executable for running MPI programs.
 MPIEXEC_EXECUTABLE:FILEPATH=/usr/bin/mpiexec
 

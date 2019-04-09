@@ -293,6 +293,7 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(b[i], &n, z[omp_get_thread_num()], &nn);
         }
+
         
         int ind_k;
         // Reorder b from row-by-row to subrow-by-subrow
@@ -368,20 +369,34 @@ int main(int argc, char **argv)
 
 
         // Print bt
-        /*cout<<"b transposed rank"<<rank<<endl;
+        #pragma omp master
+        cout<<"b transposed rank"<<rank<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
                 cout<<bt[i][j]<<" ";
             }
             cout<<endl;
-        }*/
-        
+        }
+        // Compared with poisson.c do we get equal results till here.
+        // The difference is first after fstinv
 
         // Apply fstinv on bt
         #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
+/*
+        #pragma omp master
+        cout<<"fst_inv of bt, "<<rank<<endl;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                cout<<b[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+*/
+
+
 
         /*
         * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
@@ -452,7 +467,7 @@ int main(int argc, char **argv)
         #pragma omp parallel for num_threads(t)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
-            cout <<"i"<<i<<" omp_get_thread_num"<<omp_get_thread_num()<<endl;
+            cout <<"i"<<i<<"omp_get_thread_num"<<omp_get_thread_num()<<endl;
 
         }
 
@@ -460,12 +475,12 @@ int main(int argc, char **argv)
         double u_max_all;
         double e_max_all;
 
+        //#pragma omp for reduction(max:u_max) //collapse(2)
         // cout<<"rank:"<<rank<<" block_size_sum[rank]"<< block_size_sum[rank]<<" "<<grid[block_size_sum[rank]]<<endl;
-        #pragma omp for reduction(max:u_max) //collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 //cout<<"grid"<<grid[i+1]<<grid[j+1]<<" ";
-                if (rank == 0){
+                if(rank == 0){
                     cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
                 }
                 // Stability test in infinity norm

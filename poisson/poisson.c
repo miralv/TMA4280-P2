@@ -127,7 +127,24 @@ int main(int argc, char **argv)
 
 
     transpose(bt, b, m);
+/*
+    printf("before fstinv\n");
+    for (size_t i = 0; i < m; i++){
+        for (size_t j = 0; j < m; j++){
+            printf("%e  ",bt[i][j]);
+        }
+        printf("\n\n\n");
+    }
+    */
+    
+    for (size_t i = 0; i < m; i++) {
+        fstinv_(bt[i], &n, z, &nn);
+    }
 
+    // ser at det ikke skjer noe for kolonne 2. Den er identisk rad 2 av matrisen bt før fstinv er kalt 
+
+
+    printf("after fst, transpose og fstinv\n");
     for (size_t i = 0; i < m; i++){
         for (size_t j = 0; j < m; j++){
             printf("%e  ",bt[i][j]);
@@ -135,10 +152,6 @@ int main(int argc, char **argv)
         printf("\n");
 
     }
-    for (size_t i = 0; i < m; i++) {
-        fstinv_(bt[i], &n, z, &nn);
-    }
-
 
 
     /*

@@ -151,7 +151,7 @@ int main(int argc, char **argv)
      * Grid points are generated with constant mesh size on both x- and y-axis.
      */
     double *grid = mk_1D_array(n+1, false);
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(t) schedule(static)
     for (size_t i = 0; i < n+1; i++) {
         grid[i] = i * h;
     }
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
      * Note that the indexing starts from zero here, thus i+1.
      */
     double *diag = mk_1D_array(m, false);
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(t) schedule(static)
     for (size_t i = 0; i < m; i++) {
         diag[i] = 2.0 * (1.0 - cos((i+1) * PI / n));
     }
@@ -213,15 +213,12 @@ int main(int argc, char **argv)
      */
 
     // Collapse the loop into one large iteration space     
-    #pragma omp parallel
-    {
-        #pragma omp for collapse(2)
+    #pragma omp parallel for num_threads(t) schedule(static) collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 b[i][j] = h * h * rhs_alternative(grid[block_size_sum[rank]+i+1], grid[j+1]);
             }
         }
-    }
 /*
     for( int i =0; i<block_size[rank]; i++){
         for (int j = 0; j<m; j++){
@@ -266,14 +263,14 @@ int main(int argc, char **argv)
     double *block_vec_b_pre_transp = mk_1D_array(block_size[rank]*m, false);
     double *block_vec_bt= mk_1D_array(block_size[rank]*m, false);
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i<t;i++){
         z[i] = mk_1D_array(nn,false);
     }
 
     // Create a parallel section that lasts until the end of main
-    #pragma omp parallel
-    {
+    //#pragma omp parallel
+    //{
         //t = omp_get_num_threads();
         //t = 3;
         //omp_set_num_threads(t);
@@ -289,7 +286,7 @@ int main(int argc, char **argv)
 */
 
         // Find fst of b
-        #pragma omp parallel for num_threads(t)
+        #pragma omp parallel for num_threads(t) schedule(static)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(b[i], &n, z[omp_get_thread_num()], &nn);
         }
@@ -367,9 +364,9 @@ int main(int argc, char **argv)
             }
         }    
 
-
+/*
         // Print bt
-        #pragma omp master
+        //#pragma omp master
         cout<<"b transposed rank"<<rank<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
@@ -377,16 +374,16 @@ int main(int argc, char **argv)
             }
             cout<<endl;
         }
+  */      
         // Compared with poisson.c do we get equal results till here.
         // The difference is first after fstinv
 
         // Apply fstinv on bt
-        #pragma omp parallel for num_threads(t)
+        #pragma omp parallel for num_threads(t) schedule(static)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
-/*
-        #pragma omp master
+
         cout<<"fst_inv of bt, "<<rank<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
@@ -394,7 +391,7 @@ int main(int argc, char **argv)
             }
             cout<<endl;
         }
-*/
+
 
 
 
@@ -403,7 +400,7 @@ int main(int argc, char **argv)
         */
 
 
-        #pragma omp for collapse(2)
+        #pragma omp parallel for num_threads(t) schedule(static) collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 bt[i][j] = bt[i][j] / (diag[block_size_sum[rank] + i] + diag[j]);
@@ -415,7 +412,7 @@ int main(int argc, char **argv)
         */
         
         // Apply fst on bt
-        #pragma omp parallel for num_threads(t)
+        #pragma omp parallel for num_threads(t) schedule(static)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
@@ -433,10 +430,7 @@ int main(int argc, char **argv)
 
         
         // Send rows to all processes
-        #pragma omp master 
-        {
-            MPI_Alltoallv(block_vec_bt, counts, displs, MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
-        }
+        MPI_Alltoallv(block_vec_bt, counts, displs, MPI_DOUBLE, block_vec_b_pre_transp, counts, displs, MPI_DOUBLE, MPI_COMM_WORLD);
         
         // Transpose block wise
         for (size_t i = 0; i < P; i++){
@@ -464,24 +458,23 @@ int main(int argc, char **argv)
         
 
         // Apply fstinv on b
-        #pragma omp parallel for num_threads(t)
+        #pragma omp parallel for num_threads(t) schedule(static)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
-            cout <<"i"<<i<<"omp_get_thread_num"<<omp_get_thread_num()<<endl;
+            //cout <<"i"<<i<<"omp_get_thread_num"<<omp_get_thread_num()<<endl;
 
         }
 
 
         double u_max_all;
         double e_max_all;
-
-        //#pragma omp for reduction(max:u_max) //collapse(2)
-        // cout<<"rank:"<<rank<<" block_size_sum[rank]"<< block_size_sum[rank]<<" "<<grid[block_size_sum[rank]]<<endl;
+        //   // cout<<"rank:"<<rank<<" block_size_sum[rank]"<< block_size_sum[rank]<<" "<<grid[block_size_sum[rank]]<<endl;
+        #pragma omp parallel for reduction(max:u_max,e_max) collapse(2)
         for (size_t i = 0; i < block_size[rank]; i++) {
             for (size_t j = 0; j < m; j++) {
                 //cout<<"grid"<<grid[i+1]<<grid[j+1]<<" ";
                 if(rank == 0){
-                    cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
+                    //cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
                 }
                 // Stability test in infinity norm
                 if (u_max <= fabs(b[i][j])){
@@ -493,22 +486,18 @@ int main(int argc, char **argv)
                 }
 
             }
-            cout<<endl;
-        }
-        #pragma omp master
-        {
-            MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-            MPI_Reduce(&e_max, &e_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-        }
-        if (rank == 0){
-            #pragma omp master
-            {
-                double time_used = MPI_Wtime() - time_start;
-                printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n e_max: %e\n", n, P, t, time_used, u_max_all,e_max_all);
-            }
+            //cout<<endl;
         }
         
-    } // end pragma
+        MPI_Reduce(&u_max, &u_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&e_max, &e_max_all, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+        if (rank == 0){
+            double time_used = MPI_Wtime() - time_start;
+            printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n e_max: %e\n", n, P, t, time_used, u_max_all,e_max_all);
+        }
+        
+    //} // end pragma
 
     // Release memory
     // Why is it not necessary to release the rest?

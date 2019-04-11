@@ -124,35 +124,11 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < m; i++) {
         fst_(b[i], &n, z, &nn);
     }
-
-
-    transpose(bt, b, m);
-/*
-    printf("before fstinv\n");
-    for (size_t i = 0; i < m; i++){
-        for (size_t j = 0; j < m; j++){
-            printf("%e  ",bt[i][j]);
-        }
-        printf("\n\n\n");
-    }
-    */
-    
+    transpose(bt, b, m);    
     for (size_t i = 0; i < m; i++) {
         fstinv_(bt[i], &n, z, &nn);
     }
 
-    // ser at det ikke skjer noe for kolonne 2. Den er identisk rad 2 av matrisen bt før fstinv er kalt 
-
-/*
-    printf("after fst, transpose og fstinv\n");
-    for (size_t i = 0; i < m; i++){
-        for (size_t j = 0; j < m; j++){
-            printf("%e  ",bt[i][j]);
-        }
-        printf("\n");
-
-    }
-*/
 
     /*
      * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
@@ -174,31 +150,10 @@ int main(int argc, char **argv)
     }
 
 
-    printf("first test\n");
-    for (size_t i = 0; i < m; i++){
-        for (size_t j = 0; j < m; j++){
-            printf("%e  ",bt[i][j]);
-        }
-        printf("\n");
-
-    }
-    printf("\n\n\n");
-
-
 
 
 
     transpose(b, bt, m);
-
-    printf("new test\n");
-    for (size_t i = 0; i < m; i++){
-        for (size_t j = 0; j < m; j++){
-            printf("%e  ",b[i][j]);
-        }
-        printf("\n");
-
-    }
-    printf("\n\n\n");
 
 
 
@@ -209,14 +164,6 @@ int main(int argc, char **argv)
 
 
 
-    printf("last test\n");
-    for (size_t i = 0; i < m; i++){
-        for (size_t j = 0; j < m; j++){
-            printf("%e  ",b[i][j]);
-        }
-        printf("\n");
-
-    }
 
 
     /*
@@ -227,8 +174,6 @@ int main(int argc, char **argv)
     double e_max = 0.0;
     for (size_t i = 0; i < m; i++) {
         for (size_t j = 0; j < m; j++) {
-            //u_max = u_max > fabs(b[i][j]) ? u_max : fabs(b[i][j]);
-            // printf(" b = %e  u = %e ",b[i][j],u_analytical(grid[i + 1], grid[j + 1]));
             if (u_max <= fabs(b[i][j])){
                 u_max = fabs(b[i][j]);
             }
@@ -237,9 +182,7 @@ int main(int argc, char **argv)
                 e_max = fabs(b[i][j] - u_analytical(grid[i + 1], grid[j + 1]));
             }
         }
-        // printf("\n");
     }
-    // printf("\n");
     printf("u_max = %e\ne_max = %e\n", u_max, e_max);
 
     return 0;

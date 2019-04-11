@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH --partition=WORKQ
+#SBATCH --partition=EPICALL
 #SBATCH --time=00:08:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=9	### Number of tasks (MPI Processes)

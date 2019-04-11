@@ -352,37 +352,20 @@ int main(int argc, char **argv)
         }
     }
 
-    cout <<"blockvec b:";
-    for (int i = 0; i<m*block_size[rank];i++){
-        cout<<block_vec_b[i]<<" "; 
-    }
-    cout<<"\n\n";
 
     // Reorder back from vector to matrix
     for (size_t i = 0; i < block_size[rank]; i++){
         for (size_t j = 0; j<P; j++){
             int ind_k = 0;
             for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
-                cout<<" i:"<<i<<" k:"<<k;
                 b[i][k] = block_vec_b[ displs[j] + i*block_size[j] + ind_k];
                 ind_k++;
             }
         }
-        cout<<endl;
     }
 
     // Transpose finished
     
-
-    cout<<"\n\nnew test, "<<rank<<endl;
-    for( int i =0; i<block_size[rank]; i++){
-        for (int j = 0; j<m; j++){
-            cout<<b[i][j]<<" ";
-        }
-        cout<<endl;
-    }
-    cout<<"\n\n\n";
-
 
     // Apply fstinv on b
     #pragma omp parallel for num_threads(t) schedule(static)
@@ -420,6 +403,20 @@ int main(int argc, char **argv)
         printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n e_max: %e\n", n, P, t, time_used, u_max_all,e_max_all);
     }
         
+    //} // end pragma
+
+    // Release memory
+    // Why is it not necessary to release the rest?
+    //
+    /*
+    for (size_t i = 0; i<block_size[rank]; i++){
+        free(bt[i]);
+        free(b[i]);
+    }
+    free(block_vec_b);
+    free(block_vec_bt);
+    free(block_vec_b_pre_transp);
+    */
     free(displs);
     free(counts);
     free(block_size);
@@ -431,9 +428,6 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-
-
 
 /*
  * This function is used for initializing the right-hand side of the equation.

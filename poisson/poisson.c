@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
     // ser at det ikke skjer noe for kolonne 2. Den er identisk rad 2 av matrisen bt før fstinv er kalt 
 
-
+/*
     printf("after fst, transpose og fstinv\n");
     for (size_t i = 0; i < m; i++){
         for (size_t j = 0; j < m; j++){
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
         printf("\n");
 
     }
-
+*/
 
     /*
      * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
@@ -163,16 +163,61 @@ int main(int argc, char **argv)
         }
     }
 
+
+
+
     /*
      * Compute U = S^-1 * (S * Utilde^T) (Chapter 9. page 101 step 3)
      */
     for (size_t i = 0; i < m; i++) {
         fst_(bt[i], &n, z, &nn);
     }
+
+
+    printf("first test\n");
+    for (size_t i = 0; i < m; i++){
+        for (size_t j = 0; j < m; j++){
+            printf("%e  ",bt[i][j]);
+        }
+        printf("\n");
+
+    }
+    printf("\n\n\n");
+
+
+
+
+
     transpose(b, bt, m);
+
+    printf("new test\n");
+    for (size_t i = 0; i < m; i++){
+        for (size_t j = 0; j < m; j++){
+            printf("%e  ",b[i][j]);
+        }
+        printf("\n");
+
+    }
+    printf("\n\n\n");
+
+
+
+
     for (size_t i = 0; i < m; i++) {
         fstinv_(b[i], &n, z, &nn);
     }
+
+
+
+    printf("last test\n");
+    for (size_t i = 0; i < m; i++){
+        for (size_t j = 0; j < m; j++){
+            printf("%e  ",b[i][j]);
+        }
+        printf("\n");
+
+    }
+
 
     /*
      * Compute maximal value of solution for convergence analysis in L_\infty

@@ -383,16 +383,16 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fstinv_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
-
+/*
         cout<<"fst_inv of bt, "<<rank<<endl;
         for( int i =0; i<block_size[rank]; i++){
             for (int j = 0; j<m; j++){
-                cout<<b[i][j]<<" ";
+                cout<<bt[i][j]<<" ";
             }
             cout<<endl;
         }
 
-
+*/
 
 
         /*
@@ -407,6 +407,8 @@ int main(int argc, char **argv)
             }
         }
 
+        // Til her får vi helt likt output som LF
+
         /*
         * Compute U = S^-1 * (S * Utilde^T) (Chapter 9. page 101 step 3)
         */
@@ -416,7 +418,39 @@ int main(int argc, char **argv)
         for (size_t i = 0; i < block_size[rank]; i++) {
             fst_(bt[i], &n, z[omp_get_thread_num()], &nn);
         }
+
+/*
+        cout<<"first test, "<<rank<<endl;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                cout<<bt[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+*/
+        // fortsatt helt likt
+
         //Do the transpose procedure again.
+
+        //TEST:
+  
+  /*      double counter = 1.0;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                bt[i][j]= counter;
+                counter++;
+            }
+            cout<<endl;
+        }
+
+        cout<<"first test, "<<rank<<endl;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                cout<<bt[i][j]<<" ";
+            }
+            cout<<endl;
+        }*/
+
 
         // Reorder bt from row-by-row to subrow-by-subrow
         for (size_t i = 0; i < block_size[rank]; i++){
@@ -424,6 +458,9 @@ int main(int argc, char **argv)
                 int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
                     block_vec_bt[ displs[j] + i*block_size[j] + ind_k] = bt[i][k];
+                    ind_k++;
+                    //cout<<"pos:"<<displs[j] + i*block_size[j] + ind_k<<" b[i][k]"<<b[i][k]<<endl;
+
                 }
             }
         }
@@ -443,19 +480,38 @@ int main(int argc, char **argv)
             }
         }
 
+        cout <<"blockvec b:";
+        for (int i = 0; i<m*block_size[rank];i++){
+            cout<<block_vec_b[i]<<" "; 
+        }
+        cout<<"\n\n";
+
         // Reorder back from vector to matrix
         for (size_t i = 0; i < block_size[rank]; i++){
             for (size_t j = 0; j<P; j++){
                 int ind_k = 0;
                 for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
+                    cout<<" i:"<<i<<" k:"<<k;
                     b[i][k] = block_vec_b[ displs[j] + i*block_size[j] + ind_k];
                     ind_k++;
                 }
             }
+            cout<<endl;
         }
 
         // Transpose finished
         
+        // Hat det skjedd noe feil her?
+
+        cout<<"\n\nnew test, "<<rank<<endl;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                cout<<b[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<"\n\n\n";
+
 
         // Apply fstinv on b
         #pragma omp parallel for num_threads(t) schedule(static)
@@ -466,6 +522,17 @@ int main(int argc, char **argv)
         }
 
 
+
+        cout<<"last test, "<<rank<<endl;
+        for( int i =0; i<block_size[rank]; i++){
+            for (int j = 0; j<m; j++){
+                cout<<b[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+
+
+
         double u_max_all;
         double e_max_all;
         //   // cout<<"rank:"<<rank<<" block_size_sum[rank]"<< block_size_sum[rank]<<" "<<grid[block_size_sum[rank]]<<endl;
@@ -474,7 +541,7 @@ int main(int argc, char **argv)
             for (size_t j = 0; j < m; j++) {
                 //cout<<"grid"<<grid[i+1]<<grid[j+1]<<" ";
                 if(rank == 0){
-                    //cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
+                    // cout<<" b:"<<b[i][j]<<" u:"<<u_analytical(grid[block_size_sum[rank] + i + 1], grid[j + 1]);
                 }
                 // Stability test in infinity norm
                 if (u_max <= fabs(b[i][j])){

@@ -2,6 +2,7 @@
 #SBATCH --partition=EPICALL
 #SBATCH --time=00:08:00
 #SBATCH --nodes=1
+#SBATCH --mem=15000
 #SBATCH --ntasks-per-node=9	### Number of tasks (MPI Processes)
 #SBATCH --cpus-per-task=4	### Number of threads per task (OMP threads)
 #SBATCH --job-name="Pt_9"

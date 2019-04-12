@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --partition=WORKQ
-#SBATCH --time=00:08:00
+#SBATCH --time=00:15:00
 #SBATCH --nodes=1
 #SBATCH --mem=23000 
 #SBATCH --ntasks-per-node=2	### Number of tasks (MPI Processes)

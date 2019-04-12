@@ -402,21 +402,9 @@ int main(int argc, char **argv)
         double time_used = MPI_Wtime() - time_start;
         printf("for n = %i, P=%i and t = %i we get: \n time: %e\n u_max: %e\n e_max: %e\n", n, P, t, time_used, u_max_all,e_max_all);
     }
-        
-    //} // end pragma
+    
 
-    // Release memory
-    // Why is it not necessary to release the rest?
-    //
-    /*
-    for (size_t i = 0; i<block_size[rank]; i++){
-        free(bt[i]);
-        free(b[i]);
-    }
-    free(block_vec_b);
-    free(block_vec_bt);
-    free(block_vec_b_pre_transp);
-    */
+    
     free(displs);
     free(counts);
     free(block_size);

@@ -1,0 +1,32 @@
+
+Due to MODULEPATH changes the following have been reloaded:
+  1) ncurses/.6.0
+
+-- Found MPI_C: /share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi.so  
+-- Found MPI_CXX: /share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi_cxx.so;/share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi.so  
+-- Found MPI_Fortran: /share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi_usempif08.so;/share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi_usempi_ignore_tkr.so;/share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi_mpifh.so;/share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib/libmpi.so  
+-- Try OpenMP C flag = [-fopenmp]
+-- Performing Test OpenMP_FLAG_DETECTED
+-- Performing Test OpenMP_FLAG_DETECTED - Success
+-- Try OpenMP CXX flag = [-fopenmp]
+-- Performing Test OpenMP_FLAG_DETECTED
+-- Performing Test OpenMP_FLAG_DETECTED - Success
+-- Try OpenMP Fortran flag = [-fopenmp]
+-- Performing Test OpenMP_FLAG_DETECTED
+-- Performing Test OpenMP_FLAG_DETECTED - Success
+-- Found OpenMP: -fopenmp  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /lustre1/home/miralv/TMA4280-P2/TestRun
+Scanning dependencies of target common
+[ 25%] Building Fortran object CMakeFiles/common.dir/fst.f.o
+[ 50%] Linking Fortran static library libcommon.a
+[ 50%] Built target common
+Scanning dependencies of target poisson_parallel
+[ 75%] Building CXX object CMakeFiles/poisson_parallel.dir/poisson_parallel.cpp.o
+[100%] Linking CXX executable poisson_parallel
+[100%] Built target poisson_parallel
+for n = 16384, P=36 and t = 1 we get: 
+ time: 4.213946e+01
+ u_max: 1.000000e+00
+ e_max: 1.130315e-08

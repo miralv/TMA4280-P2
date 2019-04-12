@@ -97,7 +97,7 @@ plt.plot(P,S_P, label = r"$S_p$")
 plt.plot(P, P, '--', color='red', label = "$S_p = P$")
 plt.xlabel("Processes ($P$)")
 plt.ylabel("Speedup ($S_p$)")
-plt.legend(loc = "lower right")
+plt.legend(loc = "center right")
 plt.show()
 
 plt.plot(P,par_eff,'o')

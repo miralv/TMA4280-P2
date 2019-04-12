@@ -6,4 +6,4 @@ Run the program by typing
 
 2. make 
 
-3. mpirun -np <nprocesses> ./poisson parallel <n> <nthreads>
+3. mpirun -np $nprocesses ./poisson parallel $n $nthreads

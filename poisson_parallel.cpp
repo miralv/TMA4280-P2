@@ -92,7 +92,6 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD,&P);
 
     // Assure that m> P
-
     if (n-1<P) {
         cout<< "n-1 < P! This leads to some processes receiving zero rows."<<endl;
         return 4;
@@ -134,13 +133,13 @@ int main(int argc, char **argv)
     if (rank == 0){        
         valarray<int> my_block_sizes (block_size, P);
         int rows_dist = my_block_sizes.sum();
-        // cout<< "Check that all m rows are distributed:"<<endl; Removed when running on Idun
+        cout<< "Check that all m rows are distributed:"<<endl; // Removed when running on Idun
 
         if (rows_dist != m){
             cout<<"rows distributed = "<<rows_dist<<" != m:"<<m<<endl;
         }
         else{
-           // cout<<"OK"<<endl; Removed when running on Idun
+           cout<<"OK"<<endl; // Removed when running on Idun
         }
     }
 
@@ -172,6 +171,7 @@ int main(int argc, char **argv)
      * defined Chapter 9. page 93 of the Lecture Notes.
      * Note that the indexing starts from zero here, thus i+1.
      */
+
     double *diag = mk_1D_array(m, false);
     #pragma omp parallel for num_threads(t) schedule(static)
     for (size_t i = 0; i < m; i++) {
@@ -182,6 +182,7 @@ int main(int argc, char **argv)
      * Allocate the matrices b and bt which will be used for storing value of
      * G, \tilde G^T, \tilde U^T, U as described in Chapter 9. page 101.
      */
+
     double **b = mk_2D_array(block_size[rank], m, false);
     double **bt = mk_2D_array(block_size[rank], m, false);
 
@@ -227,14 +228,10 @@ int main(int argc, char **argv)
      * array (first argument) so that the initial values are overwritten.
      */
 
-
-   
-
     double *block_vec_b = mk_1D_array(block_size[rank]*m, false);
     double *block_vec_b_pre_transp = mk_1D_array(block_size[rank]*m, false);
     double *block_vec_bt= mk_1D_array(block_size[rank]*m, false);
 
-    //#pragma omp parallel for
     for (int i = 0; i<t;i++){
         z[i] = mk_1D_array(nn,false);
     }
@@ -301,7 +298,6 @@ int main(int argc, char **argv)
     * Solve Lambda * \tilde U = \tilde G (Chapter 9. page 101 step 2)
     */
 
-
     #pragma omp parallel for num_threads(t) schedule(static) collapse(2)
     for (size_t i = 0; i < block_size[rank]; i++) {
         for (size_t j = 0; j < m; j++) {
@@ -321,8 +317,7 @@ int main(int argc, char **argv)
     }
 
 
-    //Do the transpose procedure again.
-
+    // Do the transpose procedure again.
 
     // Reorder bt from row-by-row to subrow-by-subrow
     for (size_t i = 0; i < block_size[rank]; i++){
@@ -331,8 +326,6 @@ int main(int argc, char **argv)
             for (size_t k = block_size_sum[j]; k<block_size_sum[j] + block_size[j]; k++){
                 block_vec_bt[ displs[j] + i*block_size[j] + ind_k] = bt[i][k];
                 ind_k++;
-                //cout<<"pos:"<<displs[j] + i*block_size[j] + ind_k<<" b[i][k]"<<b[i][k]<<endl;
-
             }
         }
     }
@@ -364,15 +357,13 @@ int main(int argc, char **argv)
         }
     }
 
-    // Transpose finished
+    // Transpose 2 finished
     
 
     // Apply fstinv on b
     #pragma omp parallel for num_threads(t) schedule(static)
     for (size_t i = 0; i < block_size[rank]; i++) {
         fstinv_(b[i], &n, z[omp_get_thread_num()], &nn);
-        //cout <<"i"<<i<<"omp_get_thread_num"<<omp_get_thread_num()<<endl;
-
     }
 
 

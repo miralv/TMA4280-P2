@@ -1,1 +1,1 @@
-/usr/bin/c++    -fopenmp  -Wl,-rpath  -Wl,/share/apps/software/Compiler/GCC/5.4.0-2.26/OpenMPI/1.10.3/lib  -Wl,--enable-new-dtags CMakeFiles/poisson_parallel.dir/poisson_parallel.cpp.o  -o poisson_parallel -rdynamic libcommon.a -lmpi_cxx -lmpi -lgfortran -lquadmath 
+/usr/bin/c++   -fopenmp  -rdynamic -pthread CMakeFiles/poisson_parallel.dir/poisson_parallel.cpp.o  -o poisson_parallel -Wl,-rpath,/usr/lib/x86_64-linux-gnu/openmpi/lib libcommon.a /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so -lgfortran -lquadmath 

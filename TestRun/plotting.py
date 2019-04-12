@@ -81,4 +81,27 @@ len(err)
 
 # Save chosen files for putting in table 
 np.savetxt("n.csv",n,delimiter=",",fmt="%i")
-file_
+
+
+
+
+## Lastly: plot speedup!
+
+T_1 = 1.251283e+03
+P = [2,4,6,8,10,12]
+T_P = [6.787136e+02,3.951214e+02, 2.710046e+02, 1.995009e+02,1.558085e+02,1.304740e+02] # Fyll inn manuelt ved å klippe og lime
+S_P = np.divide(T_1,T_P)
+par_eff = np.divide(S_P,P)
+plt.plot(P,S_P, label = r"$S_p$")
+# plot ideal speedup
+plt.plot(P, P, '--', color='red', label = "$S_p = P$")
+plt.xlabel("Processes ($P$)")
+plt.ylabel("Speedup ($S_p$)")
+plt.legend(loc = "lower right")
+plt.show()
+
+plt.plot(P,par_eff,'o')
+plt.xlabel("Processes ($P$)")
+plt.ylabel(r"Parallel efficiency ($\eta_p$)")
+
+plt.show()

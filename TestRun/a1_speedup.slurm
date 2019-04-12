@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --partition=WORKQ
-#SBATCH --time=00:15:00
+#SBATCH --time=00:08:00
 #SBATCH --nodes=1
 #SBATCH --mem=23000 
 #SBATCH --ntasks-per-node=1	### Number of tasks (MPI Processes)
@@ -13,7 +13,7 @@
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR} 
 
-### Test the model for Pt = 36. 
+### Test the speedup 
 module purge
 module load GCC/5.4.0-2.26
 module load CMake/3.5.2

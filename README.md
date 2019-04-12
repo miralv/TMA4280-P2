@@ -2,7 +2,8 @@
 
 Run the program by typing
 
-cmake ..
-make 
+1. cmake .. from the build folder TestRun
 
-mpirun -np <nprocesses> ./poisson parallel <n> <nthreads>
+2. make 
+
+3. mpirun -np <nprocesses> ./poisson parallel <n> <nthreads>
